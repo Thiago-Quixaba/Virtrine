@@ -1,28 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'utils.dart';
 import 'estoque.dart';
+import 'utils.dart';
 import 'vitrine.dart';
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+class CadastroEmpresa extends StatefulWidget {
+  const CadastroEmpresa({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  State<CadastroEmpresa> createState() => _CadastroEmpresaState();
 }
 
-class _LoginState extends State<Login> {
+class _CadastroEmpresaState extends State<CadastroEmpresa> {
   final supabase = Supabase.instance.client;
+
+  final TextEditingController nomeController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController cnpjController = TextEditingController();
   final TextEditingController senhaController = TextEditingController();
 
   bool isLoading = false;
 
-  Future<void> loginEmpresa() async {
+  Future<void> cadastrarEmpresa() async {
+    final nome = nomeController.text.trim();
+    final email = emailController.text.trim();
     final cnpj = cnpjController.text.trim();
     final senha = senhaController.text.trim();
 
-    if (cnpj.isEmpty || senha.isEmpty) {
+    if (nome.isEmpty || email.isEmpty || cnpj.isEmpty || senha.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Preencha todos os campos!')),
       );
@@ -32,33 +37,36 @@ class _LoginState extends State<Login> {
     setState(() => isLoading = true);
 
     try {
-      // Consulta a tabela 'empresas'
-      final response = await supabase
+      // Verifica se já existe empresa com esse CNPJ
+      final existente = await supabase
           .from('empresas')
           .select()
           .eq('cnpj', cnpj)
           .maybeSingle();
 
-      if (response == null) {
+      if (existente != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Empresa não encontrada.')),
-        );
-      } else if (response['password'] != senha) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Senha incorreta.')),
+          const SnackBar(content: Text('CNPJ já cadastrado.')),
         );
       } else {
-        // ✅ Login bem-sucedido → redireciona para o estoque
+        // Faz a inserção no Supabase
+        await supabase.from('empresas').insert({
+          'name': nome,
+          'email': email,
+          'cnpj': cnpj,
+          'password': senha,
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bem-vindo, ${response['name']}!')),
+          SnackBar(content: Text('Bem-vindo(a), $nome! Cadastro concluído.')),
         );
 
-        // Passa o nome da empresa para a tela Estoque
-        redirect(context, Estoque(empresa: response['cnpj']));
+        // Redireciona para a vitrine após o cadastro
+        redirect(context, Estoque(empresa: cnpj));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro de login: $e')),
+        SnackBar(content: Text('Erro ao cadastrar: $e')),
       );
     } finally {
       setState(() => isLoading = false);
@@ -81,8 +89,64 @@ class _LoginState extends State<Login> {
               ),
               const SizedBox(height: 20),
 
-              // Campo de CNPJ
-              SizedBox(
+              // Campo nome
+              Container(
+                width: 300,
+                child: TextField(
+                  controller: nomeController,
+                  decoration: InputDecoration(
+                    labelText: 'NOME DA EMPRESA',
+                    labelStyle: const TextStyle(color: Color(0xFF0093FF)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF0093FF),
+                        width: 2,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              // Campo email
+              Container(
+                width: 300,
+                child: TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: 'E-MAIL',
+                    labelStyle: const TextStyle(color: Color(0xFF0093FF)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF0093FF),
+                        width: 2,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              // Campo CNPJ
+              Container(
                 width: 300,
                 child: TextField(
                   controller: cnpjController,
@@ -109,8 +173,8 @@ class _LoginState extends State<Login> {
 
               const SizedBox(height: 15),
 
-              // Campo de Senha
-              SizedBox(
+              // Campo senha
+              Container(
                 width: 300,
                 child: TextField(
                   controller: senhaController,
@@ -138,9 +202,8 @@ class _LoginState extends State<Login> {
 
               const SizedBox(height: 20),
 
-              // Botão de login
               ElevatedButton(
-                onPressed: isLoading ? null : loginEmpresa,
+                onPressed: isLoading ? null : cadastrarEmpresa,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0093FF),
                   foregroundColor: Colors.white,
@@ -152,12 +215,12 @@ class _LoginState extends State<Login> {
                 ),
                 child: isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('ENTRAR', style: TextStyle(fontSize: 16)),
+                    : const Text('CADASTRAR',
+                        style: TextStyle(fontSize: 16)),
               ),
 
-              const SizedBox(height: 202),
+              const SizedBox(height: 20),
 
-              // Acesso como cliente
               TextButton(
                 onPressed: () => redirect(context, const Vitrine()),
                 style: TextButton.styleFrom(
