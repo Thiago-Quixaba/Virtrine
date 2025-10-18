@@ -18,6 +18,7 @@ class _EstoqueState extends State<Estoque> {
   final TextEditingController valorController = TextEditingController();
   final TextEditingController descricaoController = TextEditingController();
   final TextEditingController quantidadeController = TextEditingController();
+  final TextEditingController loteController = TextEditingController();
 
   String? editarProdutoLote; // Lote do produto que está sendo editado
 
@@ -50,10 +51,11 @@ class _EstoqueState extends State<Estoque> {
     final valor = valorController.text.trim();
     final desc = descricaoController.text.trim();
     final quantidade = int.tryParse(quantidadeController.text.trim()) ?? 0;
+    final lote = loteController.text.trim();
 
-    if (nome.isEmpty || valor.isEmpty) {
+    if (nome.isEmpty || valor.isEmpty || lote.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha nome e valor!')),
+        const SnackBar(content: Text('Preencha nome, valor e lote!')),
       );
       return;
     }
@@ -76,16 +78,20 @@ class _EstoqueState extends State<Estoque> {
       };
 
       if (editarProdutoLote == null) {
-        // Inserir novo produto
-        data['lote'] = DateTime.now().millisecondsSinceEpoch.toString();
+        // Novo produto — usa o lote informado
+        data['lote'] = lote;
         data['created_at'] = DateTime.now().toIso8601String();
+
         await supabase.from('produtos').insert(data);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Produto adicionado com sucesso!')),
+          SnackBar(content: Text('Produto "$nome" adicionado com sucesso!')),
         );
       } else {
-        // Atualizar produto existente
-        await supabase.from('produtos').update(data).eq('lote', editarProdutoLote!);
+        // Atualização — não altera o lote
+        await supabase
+            .from('produtos')
+            .update(data)
+            .eq('lote', editarProdutoLote!);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Produto atualizado com sucesso!')),
         );
@@ -96,6 +102,7 @@ class _EstoqueState extends State<Estoque> {
       valorController.clear();
       descricaoController.clear();
       quantidadeController.clear();
+      loteController.clear();
 
       await carregarProdutos();
     } catch (e) {
@@ -150,6 +157,7 @@ class _EstoqueState extends State<Estoque> {
       valorController.text = (produto['value'] ?? 0).toString();
       descricaoController.text = produto['description'] ?? '';
       quantidadeController.text = (produto['quantity'] ?? 0).toString();
+      loteController.text = produto['lote'] ?? '';
       editarProdutoLote = produto['lote'];
     }
 
@@ -170,6 +178,15 @@ class _EstoqueState extends State<Estoque> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Campo Lote — obrigatório e NÃO editável ao editar produto
+              TextField(
+                controller: loteController,
+                enabled: produto == null,
+                decoration: InputDecoration(
+                  labelText: 'Lote (obrigatório)',
+                  hintText: produto == null ? 'Digite o número/lote do produto' : '',
+                ),
+              ),
               TextField(
                 controller: nomeController,
                 decoration: const InputDecoration(labelText: 'Nome do Produto'),
@@ -191,12 +208,14 @@ class _EstoqueState extends State<Estoque> {
               ),
               TextField(
                 controller: validadeController,
-                decoration: const InputDecoration(labelText: 'Data de Validade (AAAA-MM-DD)'),
+                decoration: const InputDecoration(
+                    labelText: 'Data de Validade (AAAA-MM-DD)'),
                 keyboardType: TextInputType.datetime,
               ),
               TextField(
                 controller: tagsController,
-                decoration: const InputDecoration(labelText: 'Tags (separadas por vírgula)'),
+                decoration:
+                    const InputDecoration(labelText: 'Tags (separadas por vírgula)'),
               ),
               TextField(
                 controller: descricaoController,
@@ -204,6 +223,10 @@ class _EstoqueState extends State<Estoque> {
               ),
               if (produto != null) ...[
                 const SizedBox(height: 10),
+                Text(
+                  "Lote: ${produto['lote']}",
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
                 Text(
                   "Criado em: ${produto['created_at']?.toString().split('T').first ?? '-'}",
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
@@ -225,6 +248,7 @@ class _EstoqueState extends State<Estoque> {
               valorController.clear();
               descricaoController.clear();
               quantidadeController.clear();
+              loteController.clear();
             },
             child: const Text('Cancelar'),
           ),
@@ -306,6 +330,10 @@ class _EstoqueState extends State<Estoque> {
                 ),
                 const SizedBox(height: 3),
                 Text(
+                  "Lote: ${produto['lote'] ?? '-'}",
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                Text(
                   produto['description'] ?? '',
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
                 ),
@@ -316,7 +344,7 @@ class _EstoqueState extends State<Estoque> {
                     "R\$ ${produto['value'] ?? 0}",
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Colors.black,
                       fontSize: 15,
                     ),
                   ),
