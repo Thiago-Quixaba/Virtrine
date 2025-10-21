@@ -177,7 +177,6 @@ class _VitrineState extends State<Vitrine> {
           Container(
             height: 65,
             width: 65,
-           
             child: ClipRRect(
               borderRadius: BorderRadius.circular(14),
               child: Image.network(
