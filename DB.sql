@@ -38,7 +38,7 @@ create table produtos (
     updated_at timestamptz default timezone('utc'::text, now()) not null,
     name text not null,
     photo_url text,
-    expiration_date date not null,
+    expiration_date date,
     description text not null,
     tags text[],
     original_value numeric(10,2) not null,

@@ -62,15 +62,6 @@ class _VitrineState extends State<Vitrine> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // LOGO
-              Row(
-                children: [
-                  Image.asset(
-                    'assets/images/logo.png',
-                    height: 75,
-                  ),
-                ],
-              ),
               const SizedBox(height: 15),
 
               // BARRA DE PESQUISA
@@ -84,7 +75,7 @@ class _VitrineState extends State<Vitrine> {
                       const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide(color: Colors.blue),
                   ),
                 ),
               ),
@@ -173,7 +164,6 @@ class _VitrineState extends State<Vitrine> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ÍCONE/IMAGEM à esquerda
           Container(
             height: 65,
             width: 65,

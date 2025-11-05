@@ -372,13 +372,6 @@ class _EstoqueState extends State<Estoque> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // LOGO
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset('assets/images/logo.png', height: 80),
-                ],
-              ),
               const SizedBox(height: 10),
 
               // TÍTULO
