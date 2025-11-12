@@ -226,16 +226,19 @@ class _VitrineState extends State<Vitrine> {
                                               const SizedBox(height: 10),
                                               Text(
                                                 'Descrição: ${p['description'] ?? ''}',
+                                                textAlign: TextAlign.left,
                                                 style: const TextStyle(color: Color(0xFF5A5A5A)),
                                               ),
                                               const SizedBox(height: 10),
                                               Text(
                                                 'Empresa: ${p['empresa_name'] ?? 'Empresa'}',
+                                                textAlign: TextAlign.left,
                                                 style: const TextStyle(color: Color(0xFF6F6F6F)),
                                               ),
                                               const SizedBox(height: 10),
                                               Text(
                                                 'Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
+                                                textAlign: TextAlign.center,
                                                 style: const TextStyle(
                                                   color: Color(0xFF00A86B),
                                                   fontWeight: FontWeight.bold,
@@ -245,11 +248,11 @@ class _VitrineState extends State<Vitrine> {
                                               ElevatedButton(
                                                 onPressed: () => Navigator.pop(context),
                                                 style: ElevatedButton.styleFrom(
-                                                  backgroundColor: const Color(0xFF00A86B),
+                                                  backgroundColor: Colors.blue,
                                                   shape: RoundedRectangleBorder(
                                                       borderRadius: BorderRadius.circular(12)),
                                                 ),
-                                                child: const Text('Fechar'),
+                                                child: const Text('Fechar', style: TextStyle(color: Colors.white),),
                                               ),
                                             ],
                                           ),
