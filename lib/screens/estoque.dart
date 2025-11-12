@@ -20,15 +20,15 @@ class _EstoqueState extends State<Estoque> {
   final TextEditingController quantidadeController = TextEditingController();
   final TextEditingController loteController = TextEditingController();
 
-  String? editarProdutoLote; // Lote do produto que está sendo editado
+  String? editarProdutoLote; 
 
   @override
   void initState() {
     super.initState();
-    carregarProdutos();
+    carregarAllProdutos();
   }
 
-  Future<void> carregarProdutos() async {
+  Future<void> carregarAllProdutos() async {
     setState(() => loading = true);
     final response = await supabase
         .from('produtos')
@@ -104,7 +104,7 @@ class _EstoqueState extends State<Estoque> {
       quantidadeController.clear();
       loteController.clear();
 
-      await carregarProdutos();
+      await carregarAllProdutos();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao salvar: $e')),
@@ -118,7 +118,7 @@ class _EstoqueState extends State<Estoque> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Produto excluído com sucesso!')),
       );
-      await carregarProdutos();
+      await carregarAllProdutos();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao excluir: $e')),
@@ -374,7 +374,6 @@ class _EstoqueState extends State<Estoque> {
             children: [
               const SizedBox(height: 10),
 
-              // TÍTULO
               Row(
                 children: const [
                   Expanded(
@@ -393,7 +392,6 @@ class _EstoqueState extends State<Estoque> {
               ),
               const SizedBox(height: 15),
 
-              // LISTAGEM
               Expanded(
                 child: loading
                     ? const Center(child: CircularProgressIndicator())

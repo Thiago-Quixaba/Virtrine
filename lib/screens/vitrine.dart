@@ -1,3 +1,4 @@
+import 'dart:async'; // precisa importar isso!
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,14 +10,29 @@ class Vitrine extends StatefulWidget {
 }
 
 class _VitrineState extends State<Vitrine> {
+  final TextEditingController _searchController = TextEditingController();
   final supabase = Supabase.instance.client;
   List<Map<String, dynamic>> produtos = [];
   bool loading = true;
+  Timer? _debounce; 
 
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(_onSearchChanged);
     carregarProdutos();
+  }
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final termo = _searchController.text.trim();
+      if (termo.isEmpty) {
+        carregarProdutos();
+      } else {
+        buscarProdutos(termo);
+      }
+    });
   }
 
   Future<void> carregarProdutos() async {
@@ -53,6 +69,58 @@ class _VitrineState extends State<Vitrine> {
     }
   }
 
+// Em progresso
+  Future<void> buscarProdutos(String termo) async {
+    setState(() => loading = true);
+    try {
+      // Busca nome e descrição
+      final response = await supabase
+          .from('produtos')
+          .select()
+          .or('name.ilike.%$termo%,description.ilike.%$termo%')
+          .order('created_at', ascending: false);
+
+      var produtosList = List<Map<String, dynamic>>.from(response);
+
+      // Busca por tags diretamente no banco
+      final responseTags = await supabase
+          .from('produtos')
+          .select()
+          .contains('tags', [termo]); // busca se o array contém o termo exato
+
+      final produtosComTags = List<Map<String, dynamic>>.from(responseTags);
+
+      // Combina os resultados (sem duplicar)
+      final idsExistentes = produtosList.map((p) => p['lote']).toSet();
+      for (var p in produtosComTags) {
+        if (!idsExistentes.contains(p['lote'])) {
+          produtosList.add(p);
+        }
+      }
+
+      // Busca o nome da empresa de cada produto
+      for (var p in produtosList) {
+        final empresaData = await supabase
+            .from('empresas')
+            .select('name')
+            .eq('cnpj', p['empresa'])
+            .maybeSingle();
+
+        p['empresa_name'] = empresaData != null ? empresaData['name'] : 'Empresa';
+      }
+
+      setState(() {
+        produtos = produtosList;
+        loading = false;
+      });
+    } catch (e) {
+      setState(() => loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao buscar produtos: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,19 +134,21 @@ class _VitrineState extends State<Vitrine> {
 
               // BARRA DE PESQUISA
               TextField(
+                controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Buscar Produto',
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   filled: true,
-                  fillColor: Colors.grey.shade100,
+                  fillColor: const Color.fromARGB(255, 255, 255, 255),
                   contentPadding:
                       const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
-                    borderSide: BorderSide(color: Colors.blue),
+                    borderSide: const BorderSide(color: Colors.blue),
                   ),
                 ),
               ),
+
               const SizedBox(height: 25),
 
               // TÍTULO PRODUTOS
@@ -231,5 +301,11 @@ class _VitrineState extends State<Vitrine> {
         ],
       ),
     );
+  }
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 }
