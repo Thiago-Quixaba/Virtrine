@@ -249,26 +249,73 @@ class _VitrineState extends State<Vitrine> {
                                                   ],
                                                 ),
                                               ),
-                                              const SizedBox(height: 5),
-                                              // Falta: Local da empresa, Email, Telefone, categorias, data de validade
+                                              
+                                              const SizedBox(height: 10),
+                                              Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    const TextSpan(
+                                                      text: 'Endereço: ',
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                    ),
+                                                    TextSpan(
+                                                      text: p['empresa_locate'],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    const TextSpan(
+                                                      text: 'Email: ',
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                    ),
+                                                    TextSpan(
+                                                      text: p['empresa_email'],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    const TextSpan(
+                                                      text: 'Telefone: ',
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                    ),
+                                                    TextSpan(
+                                                      text: p['empresa_cellphone'],
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              
+                                              
+                                              const SizedBox(height: 25),
+
+
+                                              //  categorias, data de validade, Quantidade
                                               Center(
                                                 child: Text.rich(
                                                   TextSpan(
                                                     children: [
                                                       const TextSpan(
                                                         text: 'Preço: R\$',
-                                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 10),
+                                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 17),
                                                       ),
                                                       TextSpan(
                                                         text: p['value']?.toStringAsFixed(2) ?? '0.00',
-                                                        style: const TextStyle(color: Colors.green, fontSize: 10)
+                                                        style: const TextStyle(color: Colors.green, fontSize: 17)
                                                       ),
                                                       WidgetSpan(
                                                         child: Transform.translate(
                                                           offset: const Offset(0, -6), // move pra cima
                                                           child: Text(
                                                               p['original_value']?.toStringAsFixed(2) == p['value']?.toStringAsFixed(2) ? '' : p['original_value']?.toStringAsFixed(2),
-                                                            textScaleFactor: 0.7, // menor
+                                                            textScaleFactor: 1, // menor
                                                             style: const TextStyle(color: Colors.red, decoration: TextDecoration.lineThrough, decorationThickness: 2,),
                                                           ),
                                                         ),
