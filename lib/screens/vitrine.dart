@@ -196,8 +196,68 @@ class _VitrineState extends State<Vitrine> {
                                 category: p['name'] ?? 'Produto',
                                 market: p['empresa_name'] ?? 'Empresa',
                                 description: p['description'] ?? '',
-                                price:
-                                    'R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
+                                price: 'R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return Dialog(
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(25)),
+                                        backgroundColor: Colors.white,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(20),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Image.network(
+                                                p['image_url'] ??
+                                                    'https://cdn-icons-png.flaticon.com/512/1170/1170576.png',
+                                                height: 120,
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                p['name'] ?? 'Produto',
+                                                style: const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF2C2C2C)),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                'Descrição: ${p['description'] ?? ''}',
+                                                style: const TextStyle(color: Color(0xFF5A5A5A)),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                'Empresa: ${p['empresa_name'] ?? 'Empresa'}',
+                                                style: const TextStyle(color: Color(0xFF6F6F6F)),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                'Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
+                                                style: const TextStyle(
+                                                  color: Color(0xFF00A86B),
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              ElevatedButton(
+                                                onPressed: () => Navigator.pop(context),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: const Color(0xFF00A86B),
+                                                  shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(12)),
+                                                ),
+                                                child: const Text('Fechar'),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
                               );
                             },
                           ),
@@ -210,18 +270,21 @@ class _VitrineState extends State<Vitrine> {
   }
 
   // CARD DE PRODUTO
-  Widget _categoryCard({
-    required String imageUrl,
-    required String category,
-    required String market,
-    required String description,
-    required String price,
-  }) {
-    return Container(
+Widget _categoryCard({
+  required String imageUrl,
+  required String category,
+  required String market,
+  required String description,
+  required String price,
+  VoidCallback? onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap, // ← executa a função passada
+    child: Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF8), // tom de fundo off-white, suave e elegante
+        color: const Color(0xFFFFFCF8),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -243,39 +306,39 @@ class _VitrineState extends State<Vitrine> {
                 imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.fastfood, size: 30, color: Colors.orange);
+                  return const Icon(Icons.fastfood,
+                      size: 30, color: Colors.orange);
                 },
               ),
             ),
           ),
           const SizedBox(width: 14),
-
-              // INFORMAÇÕES DO PRODUTO
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row( mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text(
-                      category,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF2C2C2C),
+          // INFORMAÇÕES DO PRODUTO
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        category,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2C2C2C),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      market,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF6F6F6F),
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(height: 4),
+                      Text(
+                        market,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF6F6F6F),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              
+                    ]),
                 const SizedBox(height: 3),
                 Text(
                   description,
@@ -292,7 +355,7 @@ class _VitrineState extends State<Vitrine> {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF00A86B), // verde suave moderno
+                    color: Color(0xFF00A86B),
                   ),
                 ),
               ],
@@ -300,8 +363,9 @@ class _VitrineState extends State<Vitrine> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
   @override
   void dispose() {
     _debounce?.cancel();
