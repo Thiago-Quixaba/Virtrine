@@ -216,15 +216,32 @@ class _VitrineState extends State<Vitrine> {
                                                 ),
                                               ),
                                               const SizedBox(height: 10),
-                                              Text(
-                                                "Empresa: ${p['empresa_name'] ?? 'Empresa'}",
-                                                style: const TextStyle(color: Color(0xFF6F6F6F)),
-                                                textAlign: TextAlign.left, // ainda vale, mas crossAxisStart faz a diferença
+                                              Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    const TextSpan(
+                                                      text: 'Empresa: ',
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                    ),
+                                                    TextSpan(
+                                                      text: p['empresa_name'],
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                               const SizedBox(height: 5),
-                                              Text(
-                                                "Descrição: ${p['description'] ?? 'Sem descrição'}",
-                                                textAlign: TextAlign.left,
+                                              Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    const TextSpan(
+                                                      text: 'Descrição: ',
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                    ),
+                                                    TextSpan(
+                                                      text: p['description'] ?? 'Sem descrição',
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                               const SizedBox(height: 5),
                                               Text(
@@ -233,7 +250,7 @@ class _VitrineState extends State<Vitrine> {
                                                   fontWeight: FontWeight.bold,
                                                   color: Color(0xFF00A86B),
                                                 ),
-                                                textAlign: TextAlign.left,
+                                                textAlign: TextAlign.center,
                                               ),
                                             ],
                                           ),
