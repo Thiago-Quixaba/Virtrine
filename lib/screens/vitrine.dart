@@ -257,19 +257,19 @@ class _VitrineState extends State<Vitrine> {
                                                     children: [
                                                       const TextSpan(
                                                         text: 'Preço: R\$',
-                                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 10),
                                                       ),
                                                       TextSpan(
                                                         text: p['value']?.toStringAsFixed(2) ?? '0.00',
-                                                        style: const TextStyle(color: Colors.green)
+                                                        style: const TextStyle(color: Colors.green, fontSize: 10)
                                                       ),
                                                       WidgetSpan(
                                                         child: Transform.translate(
                                                           offset: const Offset(0, -6), // move pra cima
                                                           child: Text(
-                                                            p['original_value']?.toStringAsFixed(2) ?? '0.00', // parte sobrescrita
+                                                              p['original_value']?.toStringAsFixed(2) == p['value']?.toStringAsFixed(2) ? '' : p['original_value']?.toStringAsFixed(2),
                                                             textScaleFactor: 0.7, // menor
-                                                            style: const TextStyle(color: Colors.red),
+                                                            style: const TextStyle(color: Colors.red, decoration: TextDecoration.lineThrough, decorationThickness: 2,),
                                                           ),
                                                         ),
                                                       ),
