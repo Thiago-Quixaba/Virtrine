@@ -251,28 +251,32 @@ class _VitrineState extends State<Vitrine> {
                                               ),
                                               const SizedBox(height: 5),
                                               // Falta: Local da empresa, Email, Telefone, categorias, data de validade
-                                              Text.rich(
-                                                TextSpan(
-                                                  children: [
-                                                    const TextSpan(
-                                                      text: 'Preço: R\$',
-                                                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
-                                                    ),
-                                                    TextSpan(
-                                                      text: p['value']?.toStringAsFixed(2) ?? '0.00',
-                                                      style: const TextStyle(color: Colors.green)
-                                                    ),
-                                                    TextSpan(
-                                                      text: (p['original_value']?.toStringAsFixed(2) ?? '0.00'),
-                                                      style: const TextStyle(
-                                                        color: Colors.red,
-                                                        decoration: TextDecoration.lineThrough,
-                                                        decorationThickness: 2,
+                                              Center(
+                                                child: Text.rich(
+                                                  TextSpan(
+                                                    children: [
+                                                      const TextSpan(
+                                                        text: 'Preço: R\$',
+                                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
                                                       ),
-                                                    ),
-                                                  ],
+                                                      TextSpan(
+                                                        text: p['value']?.toStringAsFixed(2) ?? '0.00',
+                                                        style: const TextStyle(color: Colors.green)
+                                                      ),
+                                                      WidgetSpan(
+                                                        child: Transform.translate(
+                                                          offset: const Offset(0, -6), // move pra cima
+                                                          child: Text(
+                                                            p['original_value']?.toStringAsFixed(2) ?? '0.00', // parte sobrescrita
+                                                            textScaleFactor: 0.7, // menor
+                                                            style: const TextStyle(color: Colors.red),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  textAlign: TextAlign.center,
                                                 ),
-                                                textAlign: TextAlign.center,
                                               ),
                                             ],
                                           ),
