@@ -231,7 +231,7 @@ class _VitrineState extends State<Vitrine> {
                                               ),
                                               const SizedBox(height: 10),
                                               Text(
-                                                'Empresa: ${p['empresa_name'] ?? 'Empresa'}',
+                                                "Empresa: ${p['empresa_name'] ?? 'Empresa'}",
                                                 textAlign: TextAlign.left,
                                                 style: const TextStyle(color: Color(0xFF6F6F6F)),
                                               ),
