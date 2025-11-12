@@ -50,11 +50,14 @@ class _VitrineState extends State<Vitrine> {
       for (var p in produtosList) {
         final empresaData = await supabase
             .from('empresas')
-            .select('name')
+            .select('name, email, cellphone, locate')
             .eq('cnpj', p['empresa'])
             .maybeSingle();
 
         p['empresa_name'] = empresaData != null ? empresaData['name'] : 'Empresa';
+        p['empresa_email'] = empresaData != null ? empresaData['email'] : 'Empresa';
+        p['empresa_cellphone'] = empresaData != null ? empresaData['cellphone'] : 'Empresa';
+        p['empresa_locate'] = empresaData != null ? empresaData['locate'] : 'Empresa';
       }
 
       setState(() {
@@ -102,11 +105,14 @@ class _VitrineState extends State<Vitrine> {
       for (var p in produtosList) {
         final empresaData = await supabase
             .from('empresas')
-            .select('name')
+            .select('name, email, cellphone, locate')
             .eq('cnpj', p['empresa'])
             .maybeSingle();
 
         p['empresa_name'] = empresaData != null ? empresaData['name'] : 'Empresa';
+        p['empresa_email'] = empresaData != null ? empresaData['email'] : 'Empresa';
+        p['empresa_cellphone'] = empresaData != null ? empresaData['cellphone'] : 'Empresa';
+        p['empresa_locate'] = empresaData != null ? empresaData['locate'] : 'Empresa';
       }
 
       setState(() {
@@ -244,11 +250,27 @@ class _VitrineState extends State<Vitrine> {
                                                 ),
                                               ),
                                               const SizedBox(height: 5),
-                                              Text(
-                                                "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Color(0xFF00A86B),
+                                              // Falta: Local da empresa, Email, Telefone, categorias, data de validade
+                                              Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    const TextSpan(
+                                                      text: 'Preço: R\$',
+                                                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                                                    ),
+                                                    TextSpan(
+                                                      text: p['value']?.toStringAsFixed(2) ?? '0.00',
+                                                      style: const TextStyle(color: Colors.green)
+                                                    ),
+                                                    TextSpan(
+                                                      text: (p['original_value']?.toStringAsFixed(2) ?? '0.00'),
+                                                      style: const TextStyle(
+                                                        color: Colors.red,
+                                                        decoration: TextDecoration.lineThrough,
+                                                        decorationThickness: 2,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                                 textAlign: TextAlign.center,
                                               ),
