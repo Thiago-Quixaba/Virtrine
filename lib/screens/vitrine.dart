@@ -202,16 +202,18 @@ class _VitrineState extends State<Vitrine> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text(p['name'] ?? 'Produto'),
+                                        title: Text(p['name'] ?? 'Produto', textAlign: TextAlign.center),
                                         content: SingleChildScrollView(
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start, // <- importante
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Image.network(
-                                                p['image_url'] ?? 'https://cdn-icons-png.flaticon.com/512/1170/1170576.png',
-                                                height: 120,
-                                                fit: BoxFit.cover,
+                                              Center(
+                                                child: Image.network(
+                                                    p['image_url'] ?? 'https://cdn-icons-png.flaticon.com/512/1170/1170576.png',
+                                                    height: 120,
+                                                    fit: BoxFit.cover,
+                                                ),
                                               ),
                                               const SizedBox(height: 10),
                                               Text(
