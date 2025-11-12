@@ -201,58 +201,37 @@ class _VitrineState extends State<Vitrine> {
                                   showDialog(
                                     context: context,
                                     builder: (context) {
-                                      return Dialog(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(25)),
-                                        backgroundColor: Colors.white,
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(20),
+                                      return AlertDialog(
+                                        title: Text(p['name'] ?? 'Produto'),
+                                        content: SingleChildScrollView(
                                           child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start, // <- importante
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Image.network(
-                                                p['image_url'] ??
-                                                    'https://cdn-icons-png.flaticon.com/512/1170/1170576.png',
+                                                p['image_url'] ?? 'https://cdn-icons-png.flaticon.com/512/1170/1170576.png',
                                                 height: 120,
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Text(
-                                                p['name'] ?? 'Produto',
-                                                style: const TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF2C2C2C)),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Text(
-                                                'Descrição: ${p['description'] ?? ''}',
-                                                textAlign: TextAlign.left,
-                                                style: const TextStyle(color: Color(0xFF5A5A5A)),
+                                                fit: BoxFit.cover,
                                               ),
                                               const SizedBox(height: 10),
                                               Text(
                                                 "Empresa: ${p['empresa_name'] ?? 'Empresa'}",
-                                                textAlign: TextAlign.right,
                                                 style: const TextStyle(color: Color(0xFF6F6F6F)),
+                                                textAlign: TextAlign.left, // ainda vale, mas crossAxisStart faz a diferença
                                               ),
-                                              const SizedBox(height: 10),
+                                              const SizedBox(height: 5),
                                               Text(
-                                                'Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
-                                                textAlign: TextAlign.center,
-                                                style: const TextStyle(
-                                                  color: Color(0xFF00A86B),
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                                "Descrição: ${p['description'] ?? 'Sem descrição'}",
+                                                textAlign: TextAlign.left,
                                               ),
-                                              const SizedBox(height: 20),
-                                              ElevatedButton(
-                                                onPressed: () => Navigator.pop(context),
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.blue,
-                                                  shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(12)),
+                                              const SizedBox(height: 5),
+                                              Text(
+                                                "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xFF00A86B),
                                                 ),
-                                                child: const Text('Fechar', style: TextStyle(color: Colors.white),),
+                                                textAlign: TextAlign.left,
                                               ),
                                             ],
                                           ),
