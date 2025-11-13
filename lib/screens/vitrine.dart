@@ -199,7 +199,7 @@ class _VitrineState extends State<Vitrine> {
                               return _categoryCard(
                                 imageUrl: p['image_url'] ??
                                     'https://cdn-icons-png.flaticon.com/512/1170/1170576.png',
-                                category: p['name'] ?? 'Produto',
+                                category: "${p['name'] ?? 'Produto'}",
                                 market: p['empresa_name'] ?? 'Empresa',
                                 description: p['description'] ?? '',
                                 price: 'R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
@@ -208,7 +208,7 @@ class _VitrineState extends State<Vitrine> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text(p['name'] ?? 'Produto', textAlign: TextAlign.center),
+                                        title: Text("${p['name'] ?? 'Produto'}", textAlign: TextAlign.center),
                                         content: SingleChildScrollView(
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start, // <- importante
@@ -240,6 +240,20 @@ class _VitrineState extends State<Vitrine> {
                                                 TextSpan(
                                                   children: [
                                                     const TextSpan(
+                                                      text: 'Quantidade: ',
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                    ),
+                                                    TextSpan(
+                                                      text: '${p['quantity']}',
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 5),
+                                              Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    const TextSpan(
                                                       text: 'Descrição: ',
                                                       style: TextStyle(fontWeight: FontWeight.bold),
                                                     ),
@@ -249,8 +263,23 @@ class _VitrineState extends State<Vitrine> {
                                                   ],
                                                 ),
                                               ),
-                                              
-                                              const SizedBox(height: 10),
+                                              const SizedBox(height: 5),
+                                              if (p['expiration_date'] != null) ...[
+                                                Text.rich(
+                                                  TextSpan(
+                                                    children: [
+                                                      const TextSpan(
+                                                        text: 'Data de Validade: ',
+                                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                                      ),
+                                                      TextSpan(
+                                                        text: p['expiration_date'],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 5),
+                                              ],
                                               Text.rich(
                                                 TextSpan(
                                                   children: [
@@ -292,12 +321,7 @@ class _VitrineState extends State<Vitrine> {
                                                   ],
                                                 ),
                                               ),
-                                              
-                                              
                                               const SizedBox(height: 25),
-
-
-                                              //  categorias, data de validade, Quantidade
                                               Center(
                                                 child: Text.rich(
                                                   TextSpan(
