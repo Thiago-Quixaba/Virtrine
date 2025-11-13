@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login.dart';
-import 'screens/cadastro.dart';
 import 'screens/vitrine.dart';
 
 void main() async {
