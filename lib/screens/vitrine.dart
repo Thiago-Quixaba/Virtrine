@@ -1,6 +1,8 @@
-import 'dart:async'; // precisa importar isso!
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class Vitrine extends StatefulWidget {
   const Vitrine({super.key});
@@ -14,7 +16,7 @@ class _VitrineState extends State<Vitrine> {
   final supabase = Supabase.instance.client;
   List<Map<String, dynamic>> produtos = [];
   bool loading = true;
-  Timer? _debounce; 
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -22,6 +24,7 @@ class _VitrineState extends State<Vitrine> {
     _searchController.addListener(_onSearchChanged);
     carregarProdutos();
   }
+
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
@@ -38,7 +41,6 @@ class _VitrineState extends State<Vitrine> {
   Future<void> carregarProdutos() async {
     setState(() => loading = true);
     try {
-      // Busca todos os produtos
       final response = await supabase
           .from('produtos')
           .select()
@@ -46,7 +48,6 @@ class _VitrineState extends State<Vitrine> {
 
       final produtosList = List<Map<String, dynamic>>.from(response);
 
-      // Para cada produto, pega o nome da empresa pelo CNPJ
       for (var p in produtosList) {
         final empresaData = await supabase
             .from('empresas')
@@ -54,10 +55,10 @@ class _VitrineState extends State<Vitrine> {
             .eq('cnpj', p['empresa'])
             .maybeSingle();
 
-        p['empresa_name'] = empresaData != null ? empresaData['name'] : 'Empresa';
-        p['empresa_email'] = empresaData != null ? empresaData['email'] : 'Empresa';
-        p['empresa_cellphone'] = empresaData != null ? empresaData['cellphone'] : 'Empresa';
-        p['empresa_locate'] = empresaData != null ? empresaData['locate'] : 'Empresa';
+        p['empresa_name'] = empresaData?['name'] ?? 'Empresa';
+        p['empresa_email'] = empresaData?['email'] ?? '';
+        p['empresa_cellphone'] = empresaData?['cellphone'] ?? '';
+        p['empresa_locate'] = empresaData?['locate'] ?? '';
       }
 
       setState(() {
@@ -72,11 +73,9 @@ class _VitrineState extends State<Vitrine> {
     }
   }
 
-// Em progresso
   Future<void> buscarProdutos(String termo) async {
     setState(() => loading = true);
     try {
-      // Busca nome e descrição
       final response = await supabase
           .from('produtos')
           .select()
@@ -85,15 +84,13 @@ class _VitrineState extends State<Vitrine> {
 
       var produtosList = List<Map<String, dynamic>>.from(response);
 
-      // Busca por tags diretamente no banco
       final responseTags = await supabase
           .from('produtos')
           .select()
-          .contains('tags', [termo]); // busca se o array contém o termo exato
+          .contains('tags', [termo]);
 
       final produtosComTags = List<Map<String, dynamic>>.from(responseTags);
 
-      // Combina os resultados (sem duplicar)
       final idsExistentes = produtosList.map((p) => p['lote']).toSet();
       for (var p in produtosComTags) {
         if (!idsExistentes.contains(p['lote'])) {
@@ -101,7 +98,6 @@ class _VitrineState extends State<Vitrine> {
         }
       }
 
-      // Busca o nome da empresa de cada produto
       for (var p in produtosList) {
         final empresaData = await supabase
             .from('empresas')
@@ -109,10 +105,10 @@ class _VitrineState extends State<Vitrine> {
             .eq('cnpj', p['empresa'])
             .maybeSingle();
 
-        p['empresa_name'] = empresaData != null ? empresaData['name'] : 'Empresa';
-        p['empresa_email'] = empresaData != null ? empresaData['email'] : 'Empresa';
-        p['empresa_cellphone'] = empresaData != null ? empresaData['cellphone'] : 'Empresa';
-        p['empresa_locate'] = empresaData != null ? empresaData['locate'] : 'Empresa';
+        p['empresa_name'] = empresaData?['name'] ?? 'Empresa';
+        p['empresa_email'] = empresaData?['email'] ?? '';
+        p['empresa_cellphone'] = empresaData?['cellphone'] ?? '';
+        p['empresa_locate'] = empresaData?['locate'] ?? '';
       }
 
       setState(() {
@@ -137,35 +133,24 @@ class _VitrineState extends State<Vitrine> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 15),
-
-              // BARRA DE PESQUISA
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Buscar Produto',
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   filled: true,
-                  fillColor: const Color.fromARGB(255, 255, 255, 255),
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
                     borderSide: const BorderSide(color: Colors.blue),
                   ),
                 ),
               ),
-
               const SizedBox(height: 25),
-
-              // TÍTULO PRODUTOS
               Row(
                 children: const [
                   Expanded(
-                    child: Divider(
-                      color: Colors.blue,
-                      thickness: 2,
-                      endIndent: 10,
-                    ),
+                    child: Divider(color: Colors.blue, thickness: 2, endIndent: 10),
                   ),
                   Text(
                     "PRODUTOS",
@@ -176,17 +161,11 @@ class _VitrineState extends State<Vitrine> {
                     ),
                   ),
                   Expanded(
-                    child: Divider(
-                      color: Colors.blue,
-                      thickness: 2,
-                      indent: 10,
-                    ),
+                    child: Divider(color: Colors.blue, thickness: 2, indent: 10),
                   ),
                 ],
               ),
               const SizedBox(height: 15),
-
-              // LISTA DE PRODUTOS
               Expanded(
                 child: loading
                     ? const Center(child: CircularProgressIndicator())
@@ -196,157 +175,87 @@ class _VitrineState extends State<Vitrine> {
                             itemCount: produtos.length,
                             itemBuilder: (context, index) {
                               final p = produtos[index];
+                              final imageUrl = p['photo_url'] ??
+                                  'https://cdn-icons-png.flaticon.com/512/1170/1170576.png';
+
                               return _categoryCard(
-                                imageUrl: p['image_url'] ??
-                                    'https://cdn-icons-png.flaticon.com/512/1170/1170576.png',
-                                category: "${p['name'] ?? 'Produto'}",
+                                imageUrl: imageUrl,
+                                category: p['name'] ?? 'Produto',
                                 market: p['empresa_name'] ?? 'Empresa',
                                 description: p['description'] ?? '',
-                                price: 'R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
+                                price:
+                                    'R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
                                 onTap: () {
                                   showDialog(
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
-                                        title: Text("${p['name'] ?? 'Produto'}", textAlign: TextAlign.center),
+                                        title: Text(
+                                          p['name'] ?? 'Produto',
+                                          textAlign: TextAlign.center,
+                                        ),
                                         content: SingleChildScrollView(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start, // <- importante
-                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Center(
                                                 child: Image.network(
-                                                    p['image_url'] ?? 'https://cdn-icons-png.flaticon.com/512/1170/1170576.png',
-                                                    height: 120,
-                                                    fit: BoxFit.cover,
+                                                  imageUrl,
+                                                  height: 120,
+                                                  fit: BoxFit.cover,
                                                 ),
                                               ),
                                               const SizedBox(height: 10),
-                                              Text.rich(
-                                                TextSpan(
-                                                  children: [
-                                                    const TextSpan(
-                                                      text: 'Empresa: ',
-                                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                                    ),
-                                                    TextSpan(
-                                                      text: p['empresa_name'],
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
+                                              Text("Empresa: ${p['empresa_name']}"),
                                               const SizedBox(height: 5),
-                                              Text.rich(
-                                                TextSpan(
-                                                  children: [
-                                                    const TextSpan(
-                                                      text: 'Quantidade: ',
-                                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                                    ),
-                                                    TextSpan(
-                                                      text: '${p['quantity']}',
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
+                                              Text("Quantidade: ${p['quantity']}"),
                                               const SizedBox(height: 5),
-                                              Text.rich(
-                                                TextSpan(
-                                                  children: [
-                                                    const TextSpan(
-                                                      text: 'Descrição: ',
-                                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                                    ),
-                                                    TextSpan(
-                                                      text: p['description'] ?? 'Sem descrição',
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
+                                              Text("Descrição: ${p['description'] ?? 'Sem descrição'}"),
                                               const SizedBox(height: 5),
-                                              if (p['expiration_date'] != null) ...[
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      const TextSpan(
-                                                        text: 'Data de Validade: ',
-                                                        style: TextStyle(fontWeight: FontWeight.bold),
-                                                      ),
-                                                      TextSpan(
-                                                        text: p['expiration_date'],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 5),
-                                              ],
-                                              Text.rich(
-                                                TextSpan(
-                                                  children: [
-                                                    const TextSpan(
-                                                      text: 'Endereço: ',
-                                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                                    ),
-                                                    TextSpan(
-                                                      text: p['empresa_locate'],
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Text.rich(
-                                                TextSpan(
-                                                  children: [
-                                                    const TextSpan(
-                                                      text: 'Email: ',
-                                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                                    ),
-                                                    TextSpan(
-                                                      text: p['empresa_email'],
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Text.rich(
-                                                TextSpan(
-                                                  children: [
-                                                    const TextSpan(
-                                                      text: 'Telefone: ',
-                                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                                    ),
-                                                    TextSpan(
-                                                      text: p['empresa_cellphone'],
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 25),
-                                              Center(
-                                                child: Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      const TextSpan(
-                                                        text: 'Preço: R\$',
-                                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 17),
-                                                      ),
-                                                      TextSpan(
-                                                        text: p['value']?.toStringAsFixed(2) ?? '0.00',
-                                                        style: const TextStyle(color: Colors.green, fontSize: 17)
-                                                      ),
-                                                      WidgetSpan(
-                                                        child: Transform.translate(
-                                                          offset: const Offset(0, -6), // move pra cima
-                                                          child: Text(
-                                                              p['original_value']?.toStringAsFixed(2) == p['value']?.toStringAsFixed(2) ? '' : p['original_value']?.toStringAsFixed(2),
-                                                            textScaleFactor: 1, // menor
-                                                            style: const TextStyle(color: Colors.red, decoration: TextDecoration.lineThrough, decorationThickness: 2,),
-                                                          ),
+                                              if (p['expiration_date'] != null)
+                                                Text("Validade: ${p['expiration_date']}"),
+                                              const SizedBox(height: 5),
+                                              Text("Endereço: ${p['empresa_locate']}"),
+                                              const SizedBox(height: 15),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                children: [
+                                                  if (p['empresa_email'] != '')
+                                                    ElevatedButton.icon(
+                                                      onPressed: () => _enviarEmail(p['empresa_email']),
+                                                      icon: const Icon(Icons.email, color: Colors.white),
+                                                      label: const Text("Email"),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: Colors.blue,
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(12),
                                                         ),
                                                       ),
-                                                    ],
+                                                    ),
+                                                  if (p['empresa_cellphone'] != '')
+                                                    ElevatedButton.icon(
+                                                      onPressed: () => _abrirWhatsApp(p['empresa_cellphone']),
+                                                      icon: const FaIcon(FontAwesomeIcons.whatsapp, color: Colors.white),
+                                                      label: const Text("WhatsApp"),
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: Colors.green,
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 20),
+                                              Center(
+                                                child: Text(
+                                                  "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
+                                                  style: const TextStyle(
+                                                    color: Colors.green,
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
-                                                  textAlign: TextAlign.center,
                                                 ),
                                               ),
                                             ],
@@ -367,56 +276,51 @@ class _VitrineState extends State<Vitrine> {
     );
   }
 
-  // CARD DE PRODUTO
-Widget _categoryCard({
-  required String imageUrl,
-  required String category,
-  required String market,
-  required String description,
-  required String price,
-  VoidCallback? onTap,
-}) {
-  return GestureDetector(
-    onTap: onTap, // ← executa a função passada
-    child: Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF8),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            height: 65,
-            width: 65,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.fastfood,
-                      size: 30, color: Colors.orange);
-                },
+  Widget _categoryCard({
+    required String imageUrl,
+    required String category,
+    required String market,
+    required String description,
+    required String price,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFCF8),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              height: 65,
+              width: 65,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) =>
+                      const Icon(Icons.fastfood, size: 30, color: Colors.orange),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 14),
-          // INFORMAÇÕES DO PRODUTO
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
@@ -427,43 +331,54 @@ Widget _categoryCard({
                           color: Color(0xFF2C2C2C),
                         ),
                       ),
-                      const SizedBox(height: 4),
                       Text(
                         market,
                         style: const TextStyle(
                           fontSize: 13,
                           color: Color(0xFF6F6F6F),
-                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ]),
-                const SizedBox(height: 3),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF8A8A8A),
+                    ],
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  price,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF00A86B),
+                  const SizedBox(height: 3),
+                  Text(
+                    description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    price,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF00A86B),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
+
+  void _abrirWhatsApp(String numero) async {
+    final Uri whatsappUrl = Uri.parse("https://wa.me/$numero");
+    if (await canLaunchUrl(whatsappUrl)) {
+      await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _enviarEmail(String email) async {
+    final Uri emailUrl = Uri(scheme: 'mailto', path: email);
+    if (await canLaunchUrl(emailUrl)) {
+      await launchUrl(emailUrl);
+    }
+  }
+
   @override
   void dispose() {
     _debounce?.cancel();
