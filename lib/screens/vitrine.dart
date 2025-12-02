@@ -67,9 +67,9 @@ class _VitrineState extends State<Vitrine> {
       });
     } catch (e) {
       setState(() => loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao carregar produtos: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao carregar produtos: $e')));
     }
   }
 
@@ -84,10 +84,10 @@ class _VitrineState extends State<Vitrine> {
 
       var produtosList = List<Map<String, dynamic>>.from(response);
 
-      final responseTags = await supabase
-          .from('produtos')
-          .select()
-          .contains('tags', [termo]);
+      final responseTags = await supabase.from('produtos').select().contains(
+        'tags',
+        [termo],
+      );
 
       final produtosComTags = List<Map<String, dynamic>>.from(responseTags);
 
@@ -117,10 +117,53 @@ class _VitrineState extends State<Vitrine> {
       });
     } catch (e) {
       setState(() => loading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao buscar produtos: $e')));
+    }
+  }
+
+  Future<void> buscarProdutosPorFaixa(double precoMin, double precoMax) async {
+    setState(() => loading = true);
+    try {
+      final response = await supabase
+          .from('produtos')
+          .select()
+          .gte('value', precoMin) // >= mínimo
+          .lte('value', precoMax) // <= máximo
+          .order('created_at', ascending: false);
+
+      var produtosList = List<Map<String, dynamic>>.from(response);
+
+      // adiciona dados da empresa
+      for (var p in produtosList) {
+        final empresaData = await supabase
+            .from('empresas')
+            .select('name, email, cellphone, locate')
+            .eq('cnpj', p['empresa'])
+            .maybeSingle();
+
+        p['empresa_name'] = empresaData?['name'] ?? 'Empresa';
+        p['empresa_email'] = empresaData?['email'] ?? '';
+        p['empresa_cellphone'] = empresaData?['cellphone'] ?? '';
+        p['empresa_locate'] = empresaData?['locate'] ?? '';
+      }
+
+      setState(() {
+        produtos = produtosList;
+        loading = false;
+      });
+    } catch (e) {
+      setState(() => loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao buscar produtos: $e')),
+        SnackBar(content: Text('Erro ao buscar produtos por faixa: $e')),
       );
     }
+  }
+
+  String limitarTexto(String texto, int limite) {
+    if (texto.length <= limite) return texto;
+    return texto.substring(0, limite) + '...';
   }
 
   @override
@@ -147,10 +190,70 @@ class _VitrineState extends State<Vitrine> {
                 ),
               ),
               const SizedBox(height: 25),
+
+              ElevatedButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      final TextEditingController minController = TextEditingController();
+                      final TextEditingController maxController = TextEditingController();
+
+                      return AlertDialog(
+                        title: const Text('Filtrar por preço'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: minController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Preço mínimo',
+                                prefixIcon: Icon(Icons.attach_money),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: maxController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Preço máximo',
+                                prefixIcon: Icon(Icons.attach_money),
+                              ),
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancelar'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              final precoMin = double.tryParse(minController.text) ?? 0;
+                              final precoMax = double.tryParse(maxController.text) ?? double.infinity;
+
+                              await buscarProdutosPorFaixa(precoMin, precoMax); // 👉 chama a função
+                              Navigator.pop(context); // fecha o diálogo
+                            },
+                            child: const Text('Aplicar'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: const Text('Filtrar por preço'),
+              ),
+
               Row(
                 children: const [
                   Expanded(
-                    child: Divider(color: Colors.blue, thickness: 2, endIndent: 10),
+                    child: Divider(
+                      color: Colors.blue,
+                      thickness: 2,
+                      endIndent: 10,
+                    ),
                   ),
                   Text(
                     "PRODUTOS",
@@ -161,113 +264,145 @@ class _VitrineState extends State<Vitrine> {
                     ),
                   ),
                   Expanded(
-                    child: Divider(color: Colors.blue, thickness: 2, indent: 10),
+                    child: Divider(
+                      color: Colors.blue,
+                      thickness: 2,
+                      indent: 10,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 15),
+              
               Expanded(
                 child: loading
                     ? const Center(child: CircularProgressIndicator())
                     : produtos.isEmpty
-                        ? const Center(child: Text('Nenhum produto disponível'))
-                        : ListView.builder(
-                            itemCount: produtos.length,
-                            itemBuilder: (context, index) {
-                              final p = produtos[index];
-                              final imageUrl = p['photo_url'] ??
-                                  'https://cdn-icons-png.flaticon.com/512/1170/1170576.png';
+                    ? const Center(child: Text('Nenhum produto disponível'))
+                    : ListView.builder(
+                        itemCount: produtos.length,
+                        itemBuilder: (context, index) {
+                          final p = produtos[index];
+                          final imageUrl =
+                              p['photo_url'] ??
+                              'https://cdn-icons-png.flaticon.com/512/1170/1170576.png';
 
-                              return _categoryCard(
-                                imageUrl: imageUrl,
-                                category: p['name'] ?? 'Produto',
-                                market: p['empresa_name'] ?? 'Empresa',
-                                description: p['description'] ?? '',
-                                price:
-                                    'R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text(
-                                          p['name'] ?? 'Produto',
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        content: SingleChildScrollView(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                          return _categoryCard(
+                            imageUrl: imageUrl,
+                            category: limitarTexto(p['name'] ?? 'Produto',15),
+                            market: p['empresa_name'] ?? 'Empresa',
+                            description: limitarTexto(p['description'] ?? '', 15),
+                            price:
+                                'R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: Text(
+                                      p['name'] ?? 'Produto',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    content: SingleChildScrollView(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Center(
+                                            child: Image.network(
+                                              imageUrl,
+                                              height: 120,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Text("Empresa: ${p['empresa_name']}"),
+                                          const SizedBox(height: 5),
+                                          Text("Quantidade: ${p['quantity']}"),
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            "Descrição: ${p['description'] ?? 'Sem descrição'}",
+                                          ),
+                                          const SizedBox(height: 5),
+                                          if (p['expiration_date'] != null)
+                                            Text(
+                                              "Validade: ${p['expiration_date']}",
+                                            ),
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            "Endereço: ${p['empresa_locate']}",
+                                          ),
+                                          const SizedBox(height: 15),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
                                             children: [
-                                              Center(
-                                                child: Image.network(
-                                                  imageUrl,
-                                                  height: 120,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Text("Empresa: ${p['empresa_name']}"),
-                                              const SizedBox(height: 5),
-                                              Text("Quantidade: ${p['quantity']}"),
-                                              const SizedBox(height: 5),
-                                              Text("Descrição: ${p['description'] ?? 'Sem descrição'}"),
-                                              const SizedBox(height: 5),
-                                              if (p['expiration_date'] != null)
-                                                Text("Validade: ${p['expiration_date']}"),
-                                              const SizedBox(height: 5),
-                                              Text("Endereço: ${p['empresa_locate']}"),
-                                              const SizedBox(height: 15),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                children: [
-                                                  if (p['empresa_email'] != '')
-                                                    ElevatedButton.icon(
-                                                      onPressed: () => _enviarEmail(p['empresa_email']),
-                                                      icon: const Icon(Icons.email, color: Colors.white),
-                                                      label: const Text("Email"),
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor: Colors.blue,
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius: BorderRadius.circular(12),
-                                                        ),
-                                                      ),
+                                              if (p['empresa_email'] != '')
+                                                ElevatedButton.icon(
+                                                  onPressed: () => _enviarEmail(
+                                                    p['empresa_email'],
+                                                  ),
+                                                  icon: const Icon(
+                                                    Icons.email,
+                                                    color: Colors.white,
+                                                  ),
+                                                  label: const Text("Email"),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.blue,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
                                                     ),
-                                                  if (p['empresa_cellphone'] != '')
-                                                    ElevatedButton.icon(
-                                                      onPressed: () => _abrirWhatsApp(p['empresa_cellphone']),
-                                                      icon: const FaIcon(FontAwesomeIcons.whatsapp, color: Colors.white),
-                                                      label: const Text("WhatsApp"),
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor: Colors.green,
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius: BorderRadius.circular(12),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Center(
-                                                child: Text(
-                                                  "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
-                                                  style: const TextStyle(
-                                                    color: Colors.green,
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
-                                              ),
+                                              if (p['empresa_cellphone'] != '')
+                                                ElevatedButton.icon(
+                                                  onPressed: () =>
+                                                      _abrirWhatsApp(
+                                                        p['empresa_cellphone'],
+                                                      ),
+                                                  icon: const FaIcon(
+                                                    FontAwesomeIcons.whatsapp,
+                                                    color: Colors.white,
+                                                  ),
+                                                  label: const Text("WhatsApp"),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.green,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
                                             ],
                                           ),
-                                        ),
-                                      );
-                                    },
+                                          const SizedBox(height: 20),
+                                          Center(
+                                            child: Text(
+                                              "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
+                                              style: const TextStyle(
+                                                color: Colors.green,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   );
                                 },
                               );
                             },
-                          ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -302,7 +437,7 @@ class _VitrineState extends State<Vitrine> {
         ),
         child: Row(
           children: [
-            Container(
+            SizedBox(
               height: 65,
               width: 65,
               child: ClipRRect(
@@ -310,8 +445,11 @@ class _VitrineState extends State<Vitrine> {
                 child: Image.network(
                   imageUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) =>
-                      const Icon(Icons.fastfood, size: 30, color: Colors.orange),
+                  errorBuilder: (context, error, stack) => const Icon(
+                    Icons.fastfood,
+                    size: 30,
+                    color: Colors.orange,
+                  ),
                 ),
               ),
             ),
