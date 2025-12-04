@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'utils.dart';
+import '../utils/utils.dart';
 import 'estoque.dart';
 import 'vitrine.dart';
 

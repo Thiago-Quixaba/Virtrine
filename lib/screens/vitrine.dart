@@ -129,13 +129,12 @@ class _VitrineState extends State<Vitrine> {
       final response = await supabase
           .from('produtos')
           .select()
-          .gte('value', precoMin) // >= mínimo
-          .lte('value', precoMax) // <= máximo
+          .gte('value', precoMin)
+          .lte('value', precoMax)
           .order('created_at', ascending: false);
 
       var produtosList = List<Map<String, dynamic>>.from(response);
 
-      // adiciona dados da empresa
       for (var p in produtosList) {
         final empresaData = await supabase
             .from('empresas')
@@ -166,6 +165,39 @@ class _VitrineState extends State<Vitrine> {
     return texto.substring(0, limite) + '...';
   }
 
+  // ===== FUNÇÃO PARA ABRIR WHATSAPP =====
+  void _abrirWhatsApp(String numero) async {
+    try {
+      String cleanedNumber = numero.replaceAll(RegExp(r'[^\d]'), '');
+      if (!cleanedNumber.startsWith('55')) cleanedNumber = '55$cleanedNumber';
+      final Uri whatsappUrl = Uri.parse("https://wa.me/$cleanedNumber");
+      await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível abrir o WhatsApp')),
+      );
+    }
+  }
+
+  // ===== FUNÇÃO PARA ENVIAR EMAIL =====
+  void _enviarEmail(String email) async {
+    try {
+      final Uri emailUrl = Uri(
+        scheme: 'mailto',
+        path: email,
+        queryParameters: {
+          'subject': 'Contato via App',
+          'body': '',
+        },
+      );
+      await launchUrl(emailUrl, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível abrir o app de e-mail')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -190,14 +222,15 @@ class _VitrineState extends State<Vitrine> {
                 ),
               ),
               const SizedBox(height: 25),
-
               ElevatedButton(
                 onPressed: () {
                   showDialog(
                     context: context,
                     builder: (context) {
-                      final TextEditingController minController = TextEditingController();
-                      final TextEditingController maxController = TextEditingController();
+                      final TextEditingController minController =
+                          TextEditingController();
+                      final TextEditingController maxController =
+                          TextEditingController();
 
                       return AlertDialog(
                         title: const Text('Filtrar por preço'),
@@ -230,11 +263,15 @@ class _VitrineState extends State<Vitrine> {
                           ),
                           ElevatedButton(
                             onPressed: () async {
-                              final precoMin = double.tryParse(minController.text) ?? 0;
-                              final precoMax = double.tryParse(maxController.text) ?? double.infinity;
+                              final precoMin =
+                                  double.tryParse(minController.text) ?? 0;
+                              final precoMax =
+                                  double.tryParse(maxController.text) ??
+                                      double.infinity;
 
-                              await buscarProdutosPorFaixa(precoMin, precoMax); // 👉 chama a função
-                              Navigator.pop(context); // fecha o diálogo
+                              await buscarProdutosPorFaixa(
+                                  precoMin, precoMax);
+                              Navigator.pop(context);
                             },
                             child: const Text('Aplicar'),
                           ),
@@ -245,7 +282,6 @@ class _VitrineState extends State<Vitrine> {
                 },
                 child: const Text('Filtrar por preço'),
               ),
-
               Row(
                 children: const [
                   Expanded(
@@ -273,136 +309,148 @@ class _VitrineState extends State<Vitrine> {
                 ],
               ),
               const SizedBox(height: 15),
-              
               Expanded(
                 child: loading
                     ? const Center(child: CircularProgressIndicator())
                     : produtos.isEmpty
-                    ? const Center(child: Text('Nenhum produto disponível'))
-                    : ListView.builder(
-                        itemCount: produtos.length,
-                        itemBuilder: (context, index) {
-                          final p = produtos[index];
-                          final imageUrl =
-                              p['photo_url'] ??
-                              'https://cdn-icons-png.flaticon.com/512/1170/1170576.png';
+                        ? const Center(child: Text('Nenhum produto disponível'))
+                        : ListView.builder(
+                            itemCount: produtos.length,
+                            itemBuilder: (context, index) {
+                              final p = produtos[index];
+                              final imageUrl = p['photo_url'] ??
+                                  'https://cdn-icons-png.flaticon.com/512/1170/1170576.png';
 
-                          return _categoryCard(
-                            imageUrl: imageUrl,
-                            category: limitarTexto(p['name'] ?? 'Produto',15),
-                            market: p['empresa_name'] ?? 'Empresa',
-                            description: limitarTexto(p['description'] ?? '', 15),
-                            price:
-                                'R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: Text(
-                                      p['name'] ?? 'Produto',
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    content: SingleChildScrollView(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Center(
-                                            child: Image.network(
-                                              imageUrl,
-                                              height: 120,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          Text("Empresa: ${p['empresa_name']}"),
-                                          const SizedBox(height: 5),
-                                          Text("Quantidade: ${p['quantity']}"),
-                                          const SizedBox(height: 5),
-                                          Text(
-                                            "Descrição: ${p['description'] ?? 'Sem descrição'}",
-                                          ),
-                                          const SizedBox(height: 5),
-                                          if (p['expiration_date'] != null)
-                                            Text(
-                                              "Validade: ${p['expiration_date']}",
-                                            ),
-                                          const SizedBox(height: 5),
-                                          Text(
-                                            "Endereço: ${p['empresa_locate']}",
-                                          ),
-                                          const SizedBox(height: 15),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceEvenly,
+                              return GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: Text(
+                                          p['name'] ?? 'Produto',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        content: SingleChildScrollView(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              if (p['empresa_email'] != '')
-                                                ElevatedButton.icon(
-                                                  onPressed: () => _enviarEmail(
-                                                    p['empresa_email'],
-                                                  ),
-                                                  icon: const Icon(
-                                                    Icons.email,
-                                                    color: Colors.white,
-                                                  ),
-                                                  label: const Text("Email"),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        Colors.blue,
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            12,
-                                                          ),
-                                                    ),
-                                                  ),
+                                              Center(
+                                                child: Image.network(
+                                                  imageUrl,
+                                                  height: 120,
+                                                  fit: BoxFit.cover,
                                                 ),
-                                              if (p['empresa_cellphone'] != '')
-                                                ElevatedButton.icon(
-                                                  onPressed: () =>
-                                                      _abrirWhatsApp(
-                                                        p['empresa_cellphone'],
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                  "Empresa: ${p['empresa_name']}"),
+                                              const SizedBox(height: 5),
+                                              Text(
+                                                  "Quantidade: ${p['quantity']}"),
+                                              const SizedBox(height: 5),
+                                              Text(
+                                                "Descrição: ${p['description'] ?? 'Sem descrição'}",
+                                              ),
+                                              const SizedBox(height: 5),
+                                              if (p['expiration_date'] != null)
+                                                Text(
+                                                  "Validade: ${p['expiration_date']}",
+                                                ),
+                                              const SizedBox(height: 5),
+                                              Text(
+                                                "Endereço: ${p['empresa_locate']}",
+                                              ),
+                                              const SizedBox(height: 15),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceEvenly,
+                                                children: [
+                                                  if (p['empresa_email'] != '')
+                                                    ElevatedButton.icon(
+                                                      onPressed: () =>
+                                                          _enviarEmail(
+                                                              p['empresa_email']),
+                                                      icon: const Icon(
+                                                          Icons.email,
+                                                          color: Colors.white),
+                                                      label:
+                                                          const Text("Email"),
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                        backgroundColor:
+                                                            Colors.blue,
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      12),
+                                                        ),
                                                       ),
-                                                  icon: const FaIcon(
-                                                    FontAwesomeIcons.whatsapp,
-                                                    color: Colors.white,
-                                                  ),
-                                                  label: const Text("WhatsApp"),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        Colors.green,
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            12,
-                                                          ),
                                                     ),
+                                                  if (p['empresa_cellphone'] !=
+                                                      '')
+                                                    ElevatedButton.icon(
+                                                      onPressed: () =>
+                                                          _abrirWhatsApp(
+                                                              p[
+                                                                  'empresa_cellphone']),
+                                                      icon: const FaIcon(
+                                                        FontAwesomeIcons
+                                                            .whatsapp,
+                                                        color: Colors.white,
+                                                      ),
+                                                      label: const Text(
+                                                          "WhatsApp"),
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                        backgroundColor:
+                                                            Colors.green,
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      12),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 20),
+                                              Center(
+                                                child: Text(
+                                                  "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
+                                                  style: const TextStyle(
+                                                    color: Colors.green,
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
+                                              ),
                                             ],
                                           ),
-                                          const SizedBox(height: 20),
-                                          Center(
-                                            child: Text(
-                                              "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
-                                              style: const TextStyle(
-                                                color: Colors.green,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                        ),
+                                      );
+                                    },
                                   );
                                 },
+                                child: _categoryCard(
+                                  imageUrl: imageUrl,
+                                  category:
+                                      limitarTexto(p['name'] ?? 'Produto', 15),
+                                  market: p['empresa_name'] ?? 'Empresa',
+                                  description: limitarTexto(
+                                      p['description'] ?? '', 15),
+                                  price:
+                                      'R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}',
+                                ),
                               );
                             },
-                          );
-                        },
-                      ),
+                          ),
               ),
             ],
           ),
@@ -417,104 +465,86 @@ class _VitrineState extends State<Vitrine> {
     required String market,
     required String description,
     required String price,
-    VoidCallback? onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFCF8),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            SizedBox(
-              height: 65,
-              width: 65,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) => const Icon(
-                    Icons.fastfood,
-                    size: 30,
-                    color: Colors.orange,
-                  ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFCF8),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            height: 65,
+            width: 65,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stack) => const Icon(
+                  Icons.fastfood,
+                  size: 30,
+                  color: Colors.orange,
                 ),
               ),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        category,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF2C2C2C),
-                        ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      category,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2C2C2C),
                       ),
-                      Text(
-                        market,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF6F6F6F),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    price,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF00A86B),
                     ),
+                    Text(
+                      market,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF6F6F6F),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  price,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF00A86B),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
-  }
-
-  void _abrirWhatsApp(String numero) async {
-    final Uri whatsappUrl = Uri.parse("https://wa.me/$numero");
-    if (await canLaunchUrl(whatsappUrl)) {
-      await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-    }
-  }
-
-  void _enviarEmail(String email) async {
-    final Uri emailUrl = Uri(scheme: 'mailto', path: email);
-    if (await canLaunchUrl(emailUrl)) {
-      await launchUrl(emailUrl);
-    }
   }
 
   @override
