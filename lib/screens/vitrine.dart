@@ -39,10 +39,6 @@ class _VitrineState extends State<Vitrine> {
   void _initDeviceId() {
     // Usar timestamp como identificador único para este dispositivo/sessão
     _deviceId = 'device_${DateTime.now().millisecondsSinceEpoch}';
-    
-    // Tentar recuperar de localStorage se já existe
-    // Isso mantém o mesmo ID entre sessões
-    // _deviceId = await _getStoredDeviceId();
     print('Device ID: $_deviceId');
   }
 
@@ -91,9 +87,9 @@ class _VitrineState extends State<Vitrine> {
       });
     } catch (e) {
       setState(() => loading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro ao carregar produtos: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar produtos: $e')),
+      );
     }
   }
 
@@ -194,11 +190,17 @@ class _VitrineState extends State<Vitrine> {
       setState(() {}); // Forçar rebuild
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avaliação enviada com sucesso!')),
+        SnackBar(
+          content: const Text('Avaliação enviada com sucesso!'),
+          backgroundColor: Colors.green[800],
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao enviar avaliação: $e')),
+        SnackBar(
+          content: Text('Erro ao enviar avaliação: $e'),
+          backgroundColor: Colors.red[700],
+        ),
       );
     }
   }
@@ -216,15 +218,22 @@ class _VitrineState extends State<Vitrine> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Avaliar: $produtoNome'),
+              title: Text(
+                'Avaliar: $produtoNome',
+                style: const TextStyle(color: Color(0xFF1A1A1A)),
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(height: 10),
-                    const Text(
+                    Text(
                       'Selecione sua nota:',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: const Color(0xFF4A4A4A),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 15),
                     Row(
@@ -240,7 +249,7 @@ class _VitrineState extends State<Vitrine> {
                             index < notaSelecionada
                                 ? Icons.star
                                 : Icons.star_border,
-                            color: Colors.amber,
+                            color: const Color(0xFFF57C00),
                             size: 40,
                           ),
                         );
@@ -250,20 +259,17 @@ class _VitrineState extends State<Vitrine> {
                     TextField(
                       controller: comentarioController,
                       maxLines: 3,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Comentário (opcional)',
-                        border: OutlineInputBorder(),
+                        labelStyle: const TextStyle(color: Color(0xFF6B6B6B)),
+                        border: OutlineInputBorder(
+                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFF1565C0)),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Você pode avaliar sem fazer login!',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.green[700],
-                        fontStyle: FontStyle.italic,
-                      ),
-                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFF4A4A4A)),
                     ),
                     const SizedBox(height: 10),
                     if (_minhasAvaliacoes.containsKey(produtoId))
@@ -281,18 +287,27 @@ class _VitrineState extends State<Vitrine> {
                             setState(() {});
                             
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Avaliação removida!')),
+                              SnackBar(
+                                content: const Text('Avaliação removida!'),
+                                backgroundColor: Colors.green[800],
+                              ),
                             );
                             Navigator.pop(context);
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Erro ao remover avaliação: $e')),
+                              SnackBar(
+                                content: Text('Erro ao remover avaliação: $e'),
+                                backgroundColor: Colors.red[700],
+                              ),
                             );
                           }
                         },
-                        child: const Text(
+                        child: Text(
                           'Remover minha avaliação',
-                          style: TextStyle(color: Colors.red),
+                          style: TextStyle(
+                            color: Colors.red[700],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                   ],
@@ -301,13 +316,19 @@ class _VitrineState extends State<Vitrine> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: Color(0xFF6B6B6B)),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () async {
                     if (notaSelecionada == 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Selecione uma nota')),
+                        SnackBar(
+                          content: const Text('Selecione uma nota'),
+                          backgroundColor: Colors.orange[700],
+                        ),
                       );
                       return;
                     }
@@ -319,7 +340,13 @@ class _VitrineState extends State<Vitrine> {
                     );
                     Navigator.pop(context);
                   },
-                  child: const Text('Enviar Avaliação'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1565C0),
+                  ),
+                  child: const Text(
+                    'Enviar Avaliação',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -336,7 +363,10 @@ class _VitrineState extends State<Vitrine> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Avaliações: $produtoNome'),
+          title: Text(
+            'Avaliações: $produtoNome',
+            style: const TextStyle(color: Color(0xFF1A1A1A)),
+          ),
           content: SizedBox(
             width: double.maxFinite,
             child: Column(
@@ -357,12 +387,15 @@ class _VitrineState extends State<Vitrine> {
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.amber,
+                                color: Color(0xFFF57C00),
                               ),
                             ),
-                            const Text(
+                            Text(
                               'Média',
-                              style: TextStyle(fontSize: 12),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[700],
+                              ),
                             ),
                           ],
                         ),
@@ -373,12 +406,15 @@ class _VitrineState extends State<Vitrine> {
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blue,
+                                color: Color(0xFF1565C0),
                               ),
                             ),
-                            const Text(
+                            Text(
                               'Avaliações',
-                              style: TextStyle(fontSize: 12),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[700],
+                              ),
                             ),
                           ],
                         ),
@@ -391,16 +427,16 @@ class _VitrineState extends State<Vitrine> {
                 // Lista de avaliações
                 Expanded(
                   child: avaliacoes.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.star_border, size: 50, color: Colors.grey),
-                              SizedBox(height: 10),
-                              Text(
+                              Icon(Icons.star_border, size: 50, color: Colors.grey[500]),
+                              const SizedBox(height: 10),
+                              const Text(
                                 'Seja o primeiro a avaliar!',
                                 style: TextStyle(
-                                  color: Colors.grey,
+                                  color: Color(0xFF6B6B6B),
                                   fontSize: 16,
                                 ),
                               ),
@@ -422,7 +458,7 @@ class _VitrineState extends State<Vitrine> {
                                   child: Icon(
                                     isMinhaAvaliacao ? Icons.person : Icons.person_outline,
                                     size: 20,
-                                    color: isMinhaAvaliacao ? Colors.green : Colors.blue,
+                                    color: isMinhaAvaliacao ? Colors.green[800] : Colors.blue[800],
                                   ),
                                 ),
                                 title: Row(
@@ -431,14 +467,20 @@ class _VitrineState extends State<Vitrine> {
                                       starIndex < (avaliacao['nota'] ?? 0)
                                           ? Icons.star
                                           : Icons.star_border,
-                                      color: Colors.amber,
+                                      color: const Color(0xFFF57C00),
                                       size: 16,
                                     );
                                   }),
                                 ),
                                 subtitle: avaliacao['comentario'] != null && avaliacao['comentario'].isNotEmpty
-                                    ? Text(avaliacao['comentario'])
-                                    : const Text('Sem comentário'),
+                                    ? Text(
+                                        avaliacao['comentario'],
+                                        style: const TextStyle(color: Color(0xFF4A4A4A)),
+                                      )
+                                    : Text(
+                                        'Sem comentário',
+                                        style: TextStyle(color: Colors.grey[600]),
+                                      ),
                                 trailing: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -446,7 +488,7 @@ class _VitrineState extends State<Vitrine> {
                                       '${avaliacao['nota'] ?? 0}/5',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.blue,
+                                        color: Color(0xFF1565C0),
                                       ),
                                     ),
                                     if (isMinhaAvaliacao)
@@ -461,7 +503,7 @@ class _VitrineState extends State<Vitrine> {
                                           'Você',
                                           style: TextStyle(
                                             fontSize: 10,
-                                            color: Colors.green,
+                                            color: Color(0xFF2E7D32),
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -480,7 +522,7 @@ class _VitrineState extends State<Vitrine> {
             ElevatedButton(
               onPressed: () => _mostrarDialogAvaliacao(produtoId, produtoNome),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
+                backgroundColor: const Color(0xFFF57C00),
                 foregroundColor: Colors.white,
               ),
               child: const Row(
@@ -494,7 +536,10 @@ class _VitrineState extends State<Vitrine> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Fechar'),
+              child: const Text(
+                'Fechar',
+                style: TextStyle(color: Color(0xFF6B6B6B)),
+              ),
             ),
           ],
         );
@@ -502,7 +547,60 @@ class _VitrineState extends State<Vitrine> {
     );
   }
 
-  // ===== FIM DAS FUNÇÕES DE AVALIAÇÃO =====
+  // ===== FUNÇÕES DE CONTATO =====
+
+  void _abrirWhatsApp(String numero) async {
+    try {
+      // Limpar o número para manter apenas dígitos
+      String cleanedNumber = numero.replaceAll(RegExp(r'[^\d]'), '');
+      
+      // Adicionar código do Brasil se não tiver
+      if (!cleanedNumber.startsWith('55')) {
+        cleanedNumber = '55$cleanedNumber';
+      }
+      
+      final Uri whatsappUrl = Uri.parse("https://wa.me/$cleanedNumber");
+      
+      if (await canLaunchUrl(whatsappUrl)) {
+        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível abrir o WhatsApp')),
+        );
+      }
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível abrir o WhatsApp')),
+      );
+    }
+  }
+
+  void _enviarEmail(String email) async {
+    try {
+      final Uri emailUrl = Uri(
+        scheme: 'mailto',
+        path: email,
+        queryParameters: {
+          'subject': 'Contato via App - Interesse em produto',
+          'body': 'Olá,\n\nTenho interesse em mais informações sobre o produto anunciado no app.\n\nAtenciosamente,',
+        },
+      );
+      
+      if (await canLaunchUrl(emailUrl)) {
+        await launchUrl(emailUrl, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível abrir o app de e-mail')),
+        );
+      }
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível abrir o app de e-mail')),
+      );
+    }
+  }
+
+  // ===== FIM DAS FUNÇÕES DE CONTATO =====
 
   Future<void> buscarProdutos(String termo) async {
     setState(() => loading = true);
@@ -551,9 +649,9 @@ class _VitrineState extends State<Vitrine> {
       });
     } catch (e) {
       setState(() => loading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro ao buscar produtos: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao buscar produtos: $e')),
+      );
     }
   }
 
@@ -597,50 +695,20 @@ class _VitrineState extends State<Vitrine> {
     }
   }
 
-  String limitarTexto(String texto, int limite) {
-    if (texto.length <= limite) return texto;
-    
-    // Encontrar o último espaço antes do limite para não cortar palavras
-    final ultimoEspaco = texto.lastIndexOf(' ', limite - 3);
-    if (ultimoEspaco > 0 && ultimoEspaco > limite - 10) {
-      return texto.substring(0, ultimoEspaco) + '...';
-    }
-    return texto.substring(0, limite - 3) + '...';
-  }
-
-  void _abrirWhatsApp(String numero) async {
-    try {
-      String cleanedNumber = numero.replaceAll(RegExp(r'[^\d]'), '');
-      if (!cleanedNumber.startsWith('55')) cleanedNumber = '55$cleanedNumber';
-      final Uri whatsappUrl = Uri.parse("https://wa.me/$cleanedNumber");
-      await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir o WhatsApp')),
-      );
-    }
-  }
-
-  void _enviarEmail(String email) async {
-    try {
-      final Uri emailUrl = Uri(
-        scheme: 'mailto',
-        path: email,
-        queryParameters: {
-          'subject': 'Contato via App',
-          'body': '',
-        },
-      );
-      await launchUrl(emailUrl, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir o app de e-mail')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Cores otimizadas para melhor legibilidade
+    const Color textPrimary = Color(0xFF1A1A1A); 
+    const Color textSecondary = Color(0xFF4A4A4A); 
+    const Color textTertiary = Color(0xFF6B6B6B); 
+    const Color textLight = Color(0xFF8A8A8A); 
+    const Color textSuccess = Color(0xFF2E7D32); 
+    const Color textError = Color(0xFFC62828); 
+    const Color textWarning = Color(0xFFF57C00); 
+    const Color textInfo = Color(0xFF1565C0); 
+    const Color cardBackground = Color(0xFFFFFCF8);
+    const Color borderColor = Color(0xFFE0E0E0);
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -653,14 +721,20 @@ class _VitrineState extends State<Vitrine> {
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Buscar Produto',
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  hintStyle: const TextStyle(color: textLight),
+                  prefixIcon: const Icon(Icons.search, color: textTertiary),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
-                    borderSide: const BorderSide(color: Colors.blue),
+                    borderSide: const BorderSide(color: borderColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: const BorderSide(color: textInfo, width: 1.5),
                   ),
                 ),
+                style: const TextStyle(color: textPrimary),
               ),
               const SizedBox(height: 25),
               ElevatedButton(
@@ -674,33 +748,55 @@ class _VitrineState extends State<Vitrine> {
                           TextEditingController();
 
                       return AlertDialog(
-                        title: const Text('Filtrar por preço'),
+                        title: const Text(
+                          'Filtrar por preço',
+                          style: TextStyle(color: textPrimary),
+                        ),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             TextField(
                               controller: minController,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Preço mínimo',
-                                prefixIcon: Icon(Icons.attach_money),
+                                labelStyle: const TextStyle(color: textTertiary),
+                                prefixIcon: const Icon(Icons.attach_money, color: textTertiary),
+                                border: OutlineInputBorder(
+                                  borderSide: const BorderSide(color: borderColor),
+                                ),
+                                focusedBorder: const OutlineInputBorder(
+                                  borderSide: BorderSide(color: textInfo),
+                                ),
                               ),
+                              style: const TextStyle(color: textPrimary),
                             ),
                             const SizedBox(height: 10),
                             TextField(
                               controller: maxController,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Preço máximo',
-                                prefixIcon: Icon(Icons.attach_money),
+                                labelStyle: const TextStyle(color: textTertiary),
+                                prefixIcon: const Icon(Icons.attach_money, color: textTertiary),
+                                border: OutlineInputBorder(
+                                  borderSide: const BorderSide(color: borderColor),
+                                ),
+                                focusedBorder: const OutlineInputBorder(
+                                  borderSide: BorderSide(color: textInfo),
+                                ),
                               ),
+                              style: const TextStyle(color: textPrimary),
                             ),
                           ],
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancelar'),
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(color: textTertiary),
+                            ),
                           ),
                           ElevatedButton(
                             onPressed: () async {
@@ -714,35 +810,46 @@ class _VitrineState extends State<Vitrine> {
                                   precoMin, precoMax);
                               Navigator.pop(context);
                             },
-                            child: const Text('Aplicar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: textInfo,
+                            ),
+                            child: const Text(
+                              'Aplicar',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                         ],
                       );
                     },
                   );
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: textInfo,
+                  foregroundColor: Colors.white,
+                ),
                 child: const Text('Filtrar por preço'),
               ),
+              const SizedBox(height: 15),
               Row(
-                children: const [
-                  Expanded(
+                children: [
+                  const Expanded(
                     child: Divider(
-                      color: Colors.blue,
+                      color: textInfo,
                       thickness: 2,
                       endIndent: 10,
                     ),
                   ),
-                  Text(
+                  const Text(
                     "PRODUTOS",
                     style: TextStyle(
-                      color: Colors.blue,
+                      color: textInfo,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
-                  Expanded(
+                  const Expanded(
                     child: Divider(
-                      color: Colors.blue,
+                      color: textInfo,
                       thickness: 2,
                       indent: 10,
                     ),
@@ -754,7 +861,15 @@ class _VitrineState extends State<Vitrine> {
                 child: loading
                     ? const Center(child: CircularProgressIndicator())
                     : produtos.isEmpty
-                        ? const Center(child: Text('Nenhum produto disponível'))
+                        ? Center(
+                            child: Text(
+                              'Nenhum produto disponível',
+                              style: TextStyle(
+                                color: textTertiary,
+                                fontSize: 16,
+                              ),
+                            ),
+                          )
                         : ListView.builder(
                             itemCount: produtos.length,
                             itemBuilder: (context, index) {
@@ -777,6 +892,10 @@ class _VitrineState extends State<Vitrine> {
                                         title: Text(
                                           p['name'] ?? 'Produto',
                                           textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: textPrimary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                         content: SingleChildScrollView(
                                           child: Column(
@@ -805,11 +924,11 @@ class _VitrineState extends State<Vitrine> {
                                                       errorBuilder: (context, error, stack) {
                                                         return Container(
                                                           color: Colors.grey[200],
-                                                          child: const Center(
+                                                          child: Center(
                                                             child: Icon(
                                                               Icons.shopping_bag,
                                                               size: 50,
-                                                              color: Colors.orange,
+                                                              color: textWarning,
                                                             ),
                                                           ),
                                                         );
@@ -820,7 +939,7 @@ class _VitrineState extends State<Vitrine> {
                                               ),
                                               const SizedBox(height: 10),
                                               
-                                              // ===== SEÇÃO DE AVALIAÇÕES =====
+                                              //  SEÇÃO DE AVALIAÇÕES 
                                               Card(
                                                 child: Padding(
                                                   padding: const EdgeInsets.all(12.0),
@@ -837,8 +956,8 @@ class _VitrineState extends State<Vitrine> {
                                                                   Text(
                                                                     'Avaliação: ',
                                                                     style: TextStyle(
-                                                                      fontWeight: FontWeight.bold,
-                                                                      color: Colors.grey[700],
+                                                                      fontWeight: FontWeight.w600,
+                                                                      color: textSecondary,
                                                                     ),
                                                                   ),
                                                                   Text(
@@ -846,10 +965,13 @@ class _VitrineState extends State<Vitrine> {
                                                                     style: const TextStyle(
                                                                       fontSize: 18,
                                                                       fontWeight: FontWeight.bold,
-                                                                      color: Colors.amber,
+                                                                      color: textWarning,
                                                                     ),
                                                                   ),
-                                                                  const Text('/5'),
+                                                                  Text(
+                                                                    '/5',
+                                                                    style: TextStyle(color: textSecondary),
+                                                                  ),
                                                                 ],
                                                               ),
                                                               const SizedBox(height: 4),
@@ -859,7 +981,7 @@ class _VitrineState extends State<Vitrine> {
                                                                     index < media.round()
                                                                         ? Icons.star
                                                                         : Icons.star_border,
-                                                                    color: Colors.amber,
+                                                                    color: textWarning,
                                                                     size: 20,
                                                                   );
                                                                 }),
@@ -872,19 +994,19 @@ class _VitrineState extends State<Vitrine> {
                                                               Text(
                                                                 '$totalAvaliacoes avaliação${totalAvaliacoes != 1 ? 'es' : ''}',
                                                                 style: TextStyle(
-                                                                  color: Colors.grey[600],
+                                                                  color: textTertiary,
                                                                   fontSize: 12,
                                                                 ),
                                                               ),
                                                               const SizedBox(height: 8),
                                                               ElevatedButton.icon(
                                                                 onPressed: () => _mostrarTodasAvaliacoes(produtoId, p['name'] ?? 'Produto'),
-                                                                icon: const Icon(Icons.rate_review, size: 16),
+                                                                icon: const Icon(Icons.rate_review, size: 16, color: Colors.white),
                                                                 label: const Text('Ver todas'),
                                                                 style: ElevatedButton.styleFrom(
                                                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                                  backgroundColor: Colors.blue[50],
-                                                                  foregroundColor: Colors.blue,
+                                                                  backgroundColor: textInfo,
+                                                                  foregroundColor: Colors.white,
                                                                 ),
                                                               ),
                                                             ],
@@ -895,7 +1017,7 @@ class _VitrineState extends State<Vitrine> {
                                                       ElevatedButton(
                                                         onPressed: () => _mostrarDialogAvaliacao(produtoId, p['name'] ?? 'Produto'),
                                                         style: ElevatedButton.styleFrom(
-                                                          backgroundColor: minhaAvaliacao != null ? Colors.green : Colors.amber,
+                                                          backgroundColor: minhaAvaliacao != null ? textSuccess : textWarning,
                                                           minimumSize: const Size(double.infinity, 40),
                                                         ),
                                                         child: Row(
@@ -910,7 +1032,10 @@ class _VitrineState extends State<Vitrine> {
                                                               minhaAvaliacao != null 
                                                                   ? 'Sua avaliação: ${minhaAvaliacao['nota']}/5'
                                                                   : 'Avaliar este produto',
-                                                              style: const TextStyle(color: Colors.white),
+                                                              style: const TextStyle(
+                                                                color: Colors.white,
+                                                                fontWeight: FontWeight.w500,
+                                                              ),
                                                             ),
                                                           ],
                                                         ),
@@ -920,23 +1045,35 @@ class _VitrineState extends State<Vitrine> {
                                                 ),
                                               ),
                                               const SizedBox(height: 10),
-                                              // ===== FIM DA SEÇÃO DE AVALIAÇÕES =====
+                                              // FIM DA SEÇÃO DE AVALIAÇÕES 
                                               
-                                              Text("Empresa: ${p['empresa_name']}"),
+                                              Text(
+                                                "Empresa: ${p['empresa_name']}",
+                                                style: TextStyle(
+                                                  color: textSecondary,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
                                               const SizedBox(height: 5),
-                                              Text("Quantidade: ${p['quantity']}"),
+                                              Text(
+                                                "Quantidade: ${p['quantity']}",
+                                                style: const TextStyle(color: textSecondary),
+                                              ),
                                               const SizedBox(height: 5),
                                               Text(
                                                 "Descrição: ${p['description'] ?? 'Sem descrição'}",
+                                                style: const TextStyle(color: textSecondary),
                                               ),
                                               const SizedBox(height: 5),
                                               if (p['expiration_date'] != null)
                                                 Text(
                                                   "Validade: ${p['expiration_date']}",
+                                                  style: const TextStyle(color: textSecondary),
                                                 ),
                                               const SizedBox(height: 5),
                                               Text(
                                                 "Endereço: ${p['empresa_locate']}",
+                                                style: const TextStyle(color: textSecondary),
                                               ),
                                               const SizedBox(height: 15),
                                               Row(
@@ -944,7 +1081,7 @@ class _VitrineState extends State<Vitrine> {
                                                     MainAxisAlignment
                                                         .spaceEvenly,
                                                 children: [
-                                                  if (p['empresa_email'] != '')
+                                                  if (p['empresa_email'] != null && p['empresa_email'].isNotEmpty)
                                                     ElevatedButton.icon(
                                                       onPressed: () =>
                                                           _enviarEmail(
@@ -952,12 +1089,18 @@ class _VitrineState extends State<Vitrine> {
                                                       icon: const Icon(
                                                           Icons.email,
                                                           color: Colors.white),
-                                                      label:
-                                                          const Text("Email"),
+                                                      label: const Text(
+                                                        "Email",
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
                                                       style: ElevatedButton
                                                           .styleFrom(
                                                         backgroundColor:
-                                                            Colors.blue,
+                                                            textInfo,
                                                         shape:
                                                             RoundedRectangleBorder(
                                                           borderRadius:
@@ -967,8 +1110,7 @@ class _VitrineState extends State<Vitrine> {
                                                         ),
                                                       ),
                                                     ),
-                                                  if (p['empresa_cellphone'] !=
-                                                      '')
+                                                  if (p['empresa_cellphone'] != null && p['empresa_cellphone'].isNotEmpty)
                                                     ElevatedButton.icon(
                                                       onPressed: () =>
                                                           _abrirWhatsApp(
@@ -980,11 +1122,17 @@ class _VitrineState extends State<Vitrine> {
                                                         color: Colors.white,
                                                       ),
                                                       label: const Text(
-                                                          "WhatsApp"),
+                                                        "WhatsApp",
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
                                                       style: ElevatedButton
                                                           .styleFrom(
                                                         backgroundColor:
-                                                            Colors.green,
+                                                            textSuccess,
                                                         shape:
                                                             RoundedRectangleBorder(
                                                           borderRadius:
@@ -1001,8 +1149,8 @@ class _VitrineState extends State<Vitrine> {
                                                 child: Text(
                                                   "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
                                                   style: const TextStyle(
-                                                    color: Colors.green,
-                                                    fontSize: 18,
+                                                    color: textSuccess,
+                                                    fontSize: 20,
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
@@ -1046,11 +1194,21 @@ class _VitrineState extends State<Vitrine> {
     int totalAvaliacoes = 0,
     bool minhaAvaliacao = false,
   }) {
+    // Cores otimizadas para melhor legibilidade
+    const Color textPrimary = Color(0xFF1A1A1A);
+    const Color textSecondary = Color(0xFF4A4A4A);
+    const Color textTertiary = Color(0xFF6B6B6B);
+    const Color textSuccess = Color(0xFF2E7D32);
+    const Color textWarning = Color(0xFFF57C00);
+    const Color textInfo = Color(0xFF1565C0);
+    const Color cardBackground = Color(0xFFFFFCF8);
+    const Color borderColor = Color(0xFFE0E0E0);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFCF8),
+        color: cardBackground,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -1059,6 +1217,7 @@ class _VitrineState extends State<Vitrine> {
             offset: const Offset(0, 3),
           ),
         ],
+        border: Border.all(color: borderColor, width: 0.5),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1087,6 +1246,7 @@ class _VitrineState extends State<Vitrine> {
                   if (loadingProgress == null) return child;
                   return Center(
                     child: CircularProgressIndicator(
+                      color: textInfo,
                       value: loadingProgress.expectedTotalBytes != null
                           ? loadingProgress.cumulativeBytesLoaded /
                               loadingProgress.expectedTotalBytes!
@@ -1097,11 +1257,11 @@ class _VitrineState extends State<Vitrine> {
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey[200],
-                    child: const Center(
+                    child: Center(
                       child: Icon(
                         Icons.shopping_bag,
                         size: 40,
-                        color: Colors.orange,
+                        color: textWarning,
                       ),
                     ),
                   );
@@ -1115,13 +1275,13 @@ class _VitrineState extends State<Vitrine> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // NOME DO PRODUTO (SEM CORTAR)
+                // NOME DO PRODUTO 
                 Text(
                   productName,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: textPrimary,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1132,9 +1292,9 @@ class _VitrineState extends State<Vitrine> {
                 // NOME DA EMPRESA
                 Text(
                   empresa,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[700],
+                    color: textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
                   maxLines: 1,
@@ -1143,15 +1303,15 @@ class _VitrineState extends State<Vitrine> {
                 
                 const SizedBox(height: 4),
                 
-                // DESCRIÇÃO (SIMPLIFICADA)
+                // DESCRIÇÃO 
                 if (description.isNotEmpty)
                   Text(
                     description.length > 50
                         ? '${description.substring(0, 50)}...'
                         : description,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: textTertiary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -1168,7 +1328,7 @@ class _VitrineState extends State<Vitrine> {
                           index < avaliacao.round()
                               ? Icons.star
                               : Icons.star_border,
-                          color: Colors.amber,
+                          color: textWarning,
                           size: 14,
                         );
                       }),
@@ -1176,9 +1336,10 @@ class _VitrineState extends State<Vitrine> {
                     const SizedBox(width: 4),
                     Text(
                       '${avaliacao.toStringAsFixed(1)} ($totalAvaliacoes)',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
-                        color: Colors.grey[600],
+                        color: textTertiary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     if (minhaAvaliacao)
@@ -1188,17 +1349,18 @@ class _VitrineState extends State<Vitrine> {
                         decoration: BoxDecoration(
                           color: Colors.green[50],
                           borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: textSuccess.withOpacity(0.3)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check, size: 10, color: Colors.green[700]),
+                            Icon(Icons.check, size: 10, color: textSuccess),
                             const SizedBox(width: 2),
-                            Text(
+                            const Text(
                               'Você avaliou',
                               style: TextStyle(
                                 fontSize: 9,
-                                color: Colors.green[700],
+                                color: textSuccess,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1219,21 +1381,22 @@ class _VitrineState extends State<Vitrine> {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF00A86B),
+                        color: textSuccess,
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.blue[50],
+                        color: textInfo.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: textInfo.withOpacity(0.3)),
                       ),
                       child: const Text(
                         'Ver detalhes',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.blue,
-                          fontWeight: FontWeight.w500,
+                          color: textInfo,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
