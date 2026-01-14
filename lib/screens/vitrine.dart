@@ -18,13 +18,8 @@ class _VitrineState extends State<Vitrine> {
   bool loading = true;
   Timer? _debounce;
   
-  // Mapa para armazenar as avaliações de cada produto
   Map<String, Map<String, dynamic>> _avaliacoesPorProduto = {};
-  
-  // Mapa para armazenar a avaliação do dispositivo atual para cada produto
   Map<String, Map<String, dynamic>> _minhasAvaliacoes = {};
-  
-  // Identificador único do dispositivo (simulado)
   String? _deviceId;
 
   @override
@@ -35,11 +30,8 @@ class _VitrineState extends State<Vitrine> {
     carregarProdutos();
   }
 
-  // Inicializar identificador do dispositivo
   void _initDeviceId() {
-    // Usar timestamp como identificador único para este dispositivo/sessão
     _deviceId = 'device_${DateTime.now().millisecondsSinceEpoch}';
-    print('Device ID: $_deviceId');
   }
 
   void _onSearchChanged() {
@@ -77,7 +69,6 @@ class _VitrineState extends State<Vitrine> {
         p['empresa_cellphone'] = empresaData?['cellphone'] ?? '';
         p['empresa_locate'] = empresaData?['locate'] ?? '';
         
-        // Carregar avaliações para este produto
         await _carregarAvaliacoesProduto(p['lote']);
       }
 
@@ -92,12 +83,9 @@ class _VitrineState extends State<Vitrine> {
       );
     }
   }
-
-  // ===== FUNÇÕES DE AVALIAÇÃO (SEM LOGIN) =====
   
   Future<void> _carregarAvaliacoesProduto(String produtoId) async {
     try {
-      // Carregar média de avaliações
       final response = await supabase
           .from('avaliacoes')
           .select('nota, comentario, device_id')
@@ -123,7 +111,6 @@ class _VitrineState extends State<Vitrine> {
         };
       }
       
-      // Verificar se este dispositivo já avaliou este produto
       if (_deviceId != null) {
         final minhaAvaliacao = await supabase
             .from('avaliacoes')
@@ -147,7 +134,6 @@ class _VitrineState extends State<Vitrine> {
         _initDeviceId();
       }
 
-      // Verificar se já existe uma avaliação deste dispositivo
       final avaliacaoExistente = await supabase
           .from('avaliacoes')
           .select()
@@ -156,7 +142,6 @@ class _VitrineState extends State<Vitrine> {
           .maybeSingle();
 
       if (avaliacaoExistente != null) {
-        // Atualizar avaliação existente
         await supabase
             .from('avaliacoes')
             .update({
@@ -166,7 +151,6 @@ class _VitrineState extends State<Vitrine> {
             })
             .eq('id', avaliacaoExistente['id']);
       } else {
-        // Criar nova avaliação
         await supabase.from('avaliacoes').insert({
           'produto_id': produtoId,
           'device_id': _deviceId!,
@@ -176,7 +160,6 @@ class _VitrineState extends State<Vitrine> {
         });
       }
 
-      // Atualizar dados localmente
       _minhasAvaliacoes[produtoId] = {
         'nota': nota,
         'comentario': comentario,
@@ -184,10 +167,9 @@ class _VitrineState extends State<Vitrine> {
         'device_id': _deviceId!,
       };
 
-      // Recarregar as avaliações do produto
       await _carregarAvaliacoesProduto(produtoId);
       
-      setState(() {}); // Forçar rebuild
+      setState(() {});
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -372,7 +354,6 @@ class _VitrineState extends State<Vitrine> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Estatísticas
                 Card(
                   color: Colors.blue[50],
                   child: Padding(
@@ -424,7 +405,6 @@ class _VitrineState extends State<Vitrine> {
                 ),
                 const SizedBox(height: 10),
                 
-                // Lista de avaliações
                 Expanded(
                   child: avaliacoes.isEmpty
                       ? Center(
@@ -547,55 +527,129 @@ class _VitrineState extends State<Vitrine> {
     );
   }
 
-  // ===== FUNÇÕES DE CONTATO =====
+  // ===== FUNÇÕES DE CONTATO SIMPLIFICADAS =====
 
-  void _abrirWhatsApp(String numero) async {
+  Future<void> _abrirWhatsApp(String numero) async {
     try {
-      // Limpar o número para manter apenas dígitos
+      if (numero.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Número de WhatsApp não disponível'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Limpar e formatar o número
       String cleanedNumber = numero.replaceAll(RegExp(r'[^\d]'), '');
+      
+      // Remover zeros iniciais se houver
+      while (cleanedNumber.startsWith('0')) {
+        cleanedNumber = cleanedNumber.substring(1);
+      }
       
       // Adicionar código do Brasil se não tiver
       if (!cleanedNumber.startsWith('55')) {
         cleanedNumber = '55$cleanedNumber';
       }
+
+      // Formatar URL do WhatsApp
+      String url = 'https://wa.me/$cleanedNumber';
       
-      final Uri whatsappUrl = Uri.parse("https://wa.me/$cleanedNumber");
+      print('Tentando abrir WhatsApp: $url');
       
-      if (await canLaunchUrl(whatsappUrl)) {
-        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Não foi possível abrir o WhatsApp')),
+      // Tentar abrir diretamente
+      try {
+        await launchUrl(
+          Uri.parse(url),
+          mode: LaunchMode.externalApplication,
         );
+      } catch (e) {
+        print('Erro com wa.me, tentando whataspp://: $e');
+        // Tentar com protocolo whataspp://
+        String alternativeUrl = 'whatsapp://send?phone=$cleanedNumber';
+        try {
+          await launchUrl(
+            Uri.parse(alternativeUrl),
+            mode: LaunchMode.externalApplication,
+          );
+        } catch (e2) {
+          print('Erro com whataspp://: $e2');
+          // Se tudo falhar, mostrar instruções
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Abra o WhatsApp e envie mensagem para: $numero'),
+              backgroundColor: Colors.blue,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
       }
-    } catch (_) {
+    } catch (e) {
+      print('Erro geral ao abrir WhatsApp: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir o WhatsApp')),
+        SnackBar(
+          content: Text('Erro: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
-  void _enviarEmail(String email) async {
+  Future<void> _enviarEmail(String email) async {
     try {
-      final Uri emailUrl = Uri(
-        scheme: 'mailto',
-        path: email,
-        queryParameters: {
-          'subject': 'Contato via App - Interesse em produto',
-          'body': 'Olá,\n\nTenho interesse em mais informações sobre o produto anunciado no app.\n\nAtenciosamente,',
-        },
-      );
-      
-      if (await canLaunchUrl(emailUrl)) {
-        await launchUrl(emailUrl, mode: LaunchMode.externalApplication);
-      } else {
+      if (email.isEmpty || !email.contains('@')) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Não foi possível abrir o app de e-mail')),
+          const SnackBar(
+            content: Text('Endereço de e-mail inválido'),
+            backgroundColor: Colors.orange,
+          ),
         );
+        return;
       }
-    } catch (_) {
+
+      // Criar URL do e-mail
+      final String assunto = 'Contato via App - Interesse em produto';
+      final String corpo = 'Olá,\n\nTenho interesse em mais informações sobre o produto anunciado no app.\n\nAtenciosamente,';
+      
+      final String url = 'mailto:$email?subject=${Uri.encodeComponent(assunto)}&body=${Uri.encodeComponent(corpo)}';
+      
+      print('Tentando abrir e-mail: $url');
+      
+      // Tentar abrir diretamente
+      try {
+        await launchUrl(
+          Uri.parse(url),
+          mode: LaunchMode.externalApplication,
+        );
+      } catch (e) {
+        print('Erro ao abrir mailto: $e');
+        // Se falhar, abrir o Gmail na web
+        final String gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=$email&su=${Uri.encodeComponent(assunto)}&body=${Uri.encodeComponent(corpo)}';
+        try {
+          await launchUrl(
+            Uri.parse(gmailUrl),
+            mode: LaunchMode.externalApplication,
+          );
+        } catch (e2) {
+          print('Erro ao abrir Gmail: $e2');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Envie um e-mail para: $email\nAssunto: $assunto'),
+              backgroundColor: Colors.blue,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Erro geral ao enviar e-mail: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir o app de e-mail')),
+        SnackBar(
+          content: Text('Erro: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -639,7 +693,6 @@ class _VitrineState extends State<Vitrine> {
         p['empresa_cellphone'] = empresaData?['cellphone'] ?? '';
         p['empresa_locate'] = empresaData?['locate'] ?? '';
         
-        // Carregar avaliações
         await _carregarAvaliacoesProduto(p['lote']);
       }
 
@@ -679,7 +732,6 @@ class _VitrineState extends State<Vitrine> {
         p['empresa_cellphone'] = empresaData?['cellphone'] ?? '';
         p['empresa_locate'] = empresaData?['locate'] ?? '';
         
-        // Carregar avaliações
         await _carregarAvaliacoesProduto(p['lote']);
       }
 
@@ -697,7 +749,6 @@ class _VitrineState extends State<Vitrine> {
 
   @override
   Widget build(BuildContext context) {
-    // Cores otimizadas para melhor legibilidade
     const Color textPrimary = Color(0xFF1A1A1A); 
     const Color textSecondary = Color(0xFF4A4A4A); 
     const Color textTertiary = Color(0xFF6B6B6B); 
@@ -939,7 +990,6 @@ class _VitrineState extends State<Vitrine> {
                                               ),
                                               const SizedBox(height: 10),
                                               
-                                              //  SEÇÃO DE AVALIAÇÕES 
                                               Card(
                                                 child: Padding(
                                                   padding: const EdgeInsets.all(12.0),
@@ -1045,7 +1095,6 @@ class _VitrineState extends State<Vitrine> {
                                                 ),
                                               ),
                                               const SizedBox(height: 10),
-                                              // FIM DA SEÇÃO DE AVALIAÇÕES 
                                               
                                               Text(
                                                 "Empresa: ${p['empresa_name']}",
@@ -1183,7 +1232,6 @@ class _VitrineState extends State<Vitrine> {
     );
   }
 
-  // WIDGET _categoryCard
   Widget _categoryCard({
     required String imageUrl,
     required String productName,
@@ -1194,7 +1242,6 @@ class _VitrineState extends State<Vitrine> {
     int totalAvaliacoes = 0,
     bool minhaAvaliacao = false,
   }) {
-    // Cores otimizadas para melhor legibilidade
     const Color textPrimary = Color(0xFF1A1A1A);
     const Color textSecondary = Color(0xFF4A4A4A);
     const Color textTertiary = Color(0xFF6B6B6B);
@@ -1222,7 +1269,6 @@ class _VitrineState extends State<Vitrine> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // IMAGEM DO PRODUTO
           Container(
             width: 90,
             height: 90,
@@ -1270,12 +1316,10 @@ class _VitrineState extends State<Vitrine> {
             ),
           ),
           
-          // INFORMAÇÕES DO PRODUTO
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // NOME DO PRODUTO 
                 Text(
                   productName,
                   style: const TextStyle(
@@ -1289,7 +1333,6 @@ class _VitrineState extends State<Vitrine> {
                 
                 const SizedBox(height: 4),
                 
-                // NOME DA EMPRESA
                 Text(
                   empresa,
                   style: const TextStyle(
@@ -1303,7 +1346,6 @@ class _VitrineState extends State<Vitrine> {
                 
                 const SizedBox(height: 4),
                 
-                // DESCRIÇÃO 
                 if (description.isNotEmpty)
                   Text(
                     description.length > 50
@@ -1319,7 +1361,6 @@ class _VitrineState extends State<Vitrine> {
                 
                 const SizedBox(height: 6),
                 
-                // AVALIAÇÃO
                 Row(
                   children: [
                     Row(
@@ -1372,7 +1413,6 @@ class _VitrineState extends State<Vitrine> {
                 
                 const SizedBox(height: 6),
                 
-                // PREÇO
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

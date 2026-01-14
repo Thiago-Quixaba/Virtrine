@@ -58,6 +58,22 @@ class _EstoqueState extends State<Estoque> {
     });
   }
 
+  Future<bool> verificarLoteExistente(String lote) async {
+    try {
+      final response = await supabase
+          .from('produtos')
+          .select('lote')
+          .eq('lote', lote)
+          .maybeSingle();
+
+      // Se encontrar um registro, o lote já existe
+      return response != null;
+    } catch (e) {
+      debugPrint("Erro ao verificar lote: $e");
+      return false;
+    }
+  }
+
   Future<void> escolherImagem() async {
     final resultado = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -68,7 +84,7 @@ class _EstoqueState extends State<Estoque> {
       setState(() {
         imagemBytes = resultado.files.first.bytes!;
         imagemBase64 = base64Encode(imagemBytes!);
-        imagemApagada = false; // Se escolheu nova imagem, não está apagada
+        imagemApagada = false;
       });
     }
   }
@@ -119,30 +135,54 @@ class _EstoqueState extends State<Estoque> {
     final quantidade = int.tryParse(quantidadeController.text.trim()) ?? 0;
     final lote = loteController.text.trim();
 
-    if (nome.isEmpty || valor.isEmpty || lote.isEmpty) {
+    // VALIDAÇÃO DOS CAMPOS OBRIGATÓRIOS
+    List<String> camposFaltantes = [];
+    if (nome.isEmpty) camposFaltantes.add("Nome");
+    if (valor.isEmpty) camposFaltantes.add("Valor de Venda");
+    if (lote.isEmpty) camposFaltantes.add("Lote");
+    
+    if (camposFaltantes.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha nome, valor e lote!')),
+        SnackBar(
+          content: Text('Preencha os campos obrigatórios: ${camposFaltantes.join(", ")}'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
 
+    // VALIDAÇÃO DE LOTE DUPLICADO (apenas para novo cadastro)
+    if (editarProdutoLote == null) {
+      bool loteExiste = await verificarLoteExistente(lote);
+      if (loteExiste) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('O lote "$lote" já existe! Por favor, insira um lote diferente.'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          abrirDialogCadastro();
+        });
+        return;
+      }
+    }
+
     String? imageURL;
 
-    // Se apagou a imagem, não enviar URL antiga
     if (imagemApagada) {
       imageURL = null;
-      await deletarImagemImgbb(); // Remove do Imgbb se havia
+      await deletarImagemImgbb();
     } else if (imagemBytes != null && imagemBase64 != null) {
-      // Se escolheu nova imagem
       imageURL = await uploadImagemWeb(imagemBase64!);
 
-      // Remove antiga se existia
       if (produtoEditando != null && produtoEditando!['photo_url'] != null) {
         imagemDeleteUrl = produtoEditando!['delete_url'];
         await deletarImagemImgbb();
       }
     } else if (produtoEditando != null && produtoEditando!['photo_url'] != null) {
-      imageURL = produtoEditando!['photo_url']; // Mantém a antiga se nada mudou
+      imageURL = produtoEditando!['photo_url'];
     }
 
     try {
@@ -206,7 +246,6 @@ class _EstoqueState extends State<Estoque> {
     try {
       await supabase.from('produtos').delete().eq('lote', lote);
 
-      // Deleta imagem do Imgbb se houver
       if (produto['photo_url'] != null && produto['delete_url'] != null) {
         try {
           await http.get(Uri.parse(produto['delete_url']));
@@ -226,7 +265,40 @@ class _EstoqueState extends State<Estoque> {
     }
   }
 
+  // Widget para criar label com asterisco para campos obrigatórios
+  Widget _labelComAsterisco(String texto, {bool obrigatorio = true}) {
+    return RichText(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: texto,
+            style: const TextStyle(color: Colors.black87),
+          ),
+          if (obrigatorio)
+            const TextSpan(
+              text: ' *',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   void abrirDialogCadastro({Map<String, dynamic>? produto}) {
+    final nomeTemp = nomeController.text;
+    final valorTemp = valorController.text;
+    final descTemp = descricaoController.text;
+    final qtdTemp = quantidadeController.text;
+    final loteTemp = loteController.text;
+    final imagemBytesTemp = imagemBytes;
+    final imagemBase64Temp = imagemBase64;
+    final produtoEditandoTemp = produtoEditando;
+    final editarLoteTemp = editarProdutoLote;
+    final imagemApagadaTemp = imagemApagada;
+
     if (produto != null) {
       nomeController.text = produto['name'] ?? '';
       valorController.text = (produto['value'] ?? 0).toString();
@@ -238,7 +310,16 @@ class _EstoqueState extends State<Estoque> {
       imagemDeleteUrl = produto['delete_url'];
       imagemApagada = false;
     } else {
-      limparCampos();
+      nomeController.text = nomeTemp;
+      valorController.text = valorTemp;
+      descricaoController.text = descTemp;
+      quantidadeController.text = qtdTemp;
+      loteController.text = loteTemp;
+      imagemBytes = imagemBytesTemp;
+      imagemBase64 = imagemBase64Temp;
+      produtoEditando = produtoEditandoTemp;
+      editarProdutoLote = editarLoteTemp;
+      imagemApagada = imagemApagadaTemp;
     }
 
     final custoController = TextEditingController(
@@ -258,45 +339,77 @@ class _EstoqueState extends State<Estoque> {
           content: SingleChildScrollView(
             child: Column(
               children: [
+                // LOTE (Obrigatório apenas para novo)
                 TextField(
                   controller: loteController,
                   enabled: produto == null,
-                  decoration: const InputDecoration(labelText: "Lote"),
+                  decoration: InputDecoration(
+                    label: _labelComAsterisco("Lote", obrigatorio: produto == null),
+                  ),
                 ),
+                
+                // NOME (Obrigatório)
                 TextField(
                   controller: nomeController,
-                  decoration: const InputDecoration(labelText: "Nome"),
+                  decoration: InputDecoration(
+                    label: _labelComAsterisco("Nome"),
+                  ),
                 ),
+                
+                // VALOR DE VENDA (Obrigatório)
                 TextField(
                   controller: valorController,
-                  decoration: const InputDecoration(labelText: "Valor de Venda"),
-                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    label: _labelComAsterisco("Valor de Venda"),
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
                 ),
+                
+                // CUSTO ORIGINAL (Opcional)
                 TextField(
                   controller: custoController,
-                  decoration: const InputDecoration(labelText: "Custo Original"),
-                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Custo Original",
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
                 ),
+                
+                // QUANTIDADE (Obrigatório)
                 TextField(
                   controller: quantidadeController,
-                  decoration: const InputDecoration(labelText: "Quantidade"),
+                  decoration: InputDecoration(
+                    label: _labelComAsterisco("Quantidade"),
+                  ),
                   keyboardType: TextInputType.number,
                 ),
+                
+                // VALIDADE (Opcional)
                 TextField(
                   controller: validadeController,
-                  decoration: const InputDecoration(labelText: "Validade (AAAA-MM-DD)"),
+                  decoration: const InputDecoration(
+                    labelText: "Validade (AAAA-MM-DD)",
+                  ),
                 ),
+                
+                // TAGS (Opcional)
                 TextField(
                   controller: tagsController,
-                  decoration: const InputDecoration(labelText: "Tags"),
+                  decoration: const InputDecoration(
+                    labelText: "Tags",
+                  ),
                 ),
+                
+                // DESCRIÇÃO (Opcional)
                 TextField(
                   controller: descricaoController,
-                  decoration: const InputDecoration(labelText: "Descrição"),
+                  decoration: const InputDecoration(
+                    labelText: "Descrição",
+                  ),
+                  maxLines: 3,
                 ),
                 const SizedBox(height: 12),
 
-                // IMAGEM
+                // IMAGEM (Opcional) - SEM ASTERISCO
                 SizedBox(
                   height: 140,
                   width: double.infinity,
@@ -324,16 +437,13 @@ class _EstoqueState extends State<Estoque> {
                               right: 4,
                               child: GestureDetector(
                                 onTap: () async {
-                                  // Marca imagem como apagada
                                   imagemApagada = true;
 
-                                  // Remove foto do estado
                                   setState(() {
                                     imagemBytes = null;
                                     imagemBase64 = null;
                                   });
 
-                                  // Atualiza no Supabase para ficar padrão
                                   if (produto != null) {
                                     await supabase
                                         .from('produtos')
@@ -344,7 +454,6 @@ class _EstoqueState extends State<Estoque> {
                                     });
                                   }
 
-                                  // Remove do Imgbb
                                   await deletarImagemImgbb();
                                 },
                                 child: Container(
@@ -403,6 +512,7 @@ class _EstoqueState extends State<Estoque> {
                           ),
                         ),
                 ),
+                // REMOVIDA A LEGENDA DOS ASTERISCOS
               ],
             ),
           ),
@@ -410,15 +520,17 @@ class _EstoqueState extends State<Estoque> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                editarProdutoLote = null;
-                limparCampos();
+                if (produto != null) {
+                  editarProdutoLote = null;
+                  limparCampos();
+                }
               },
               child: const Text("Cancelar"),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                salvarProduto(
+                await salvarProduto(
                   custo: custoController.text,
                   validade: validadeController.text,
                   tags: tagsController.text,
@@ -462,7 +574,7 @@ class _EstoqueState extends State<Estoque> {
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                  ),
+                ),
                 ),
                 Text("Lote: ${p['lote']}"),
                 Text(
