@@ -22,6 +22,16 @@ class _VitrineState extends State<Vitrine> {
   Map<String, Map<String, dynamic>> _minhasAvaliacoes = {};
   String? _deviceId;
 
+  // Cores padrão (mesmo do estoque)
+  static const Color primaryColor = Color(0xFF0093FF);
+  static const Color primaryDark = Color(0xFF0066CC);
+  static const Color textPrimary = Color(0xFF333333);
+  static const Color textSecondary = Color(0xFF666666);
+  static const Color textTertiary = Color(0xFF999999);
+  static const Color successColor = Color(0xFF2E7D32);
+  static const Color warningColor = Color(0xFFF57C00);
+  static const Color borderColor = Color.fromARGB(255, 224, 224, 224);
+
   @override
   void initState() {
     super.initState();
@@ -79,7 +89,10 @@ class _VitrineState extends State<Vitrine> {
     } catch (e) {
       setState(() => loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao carregar produtos: $e')),
+        SnackBar(
+          content: Text('Erro ao carregar produtos: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -174,14 +187,14 @@ class _VitrineState extends State<Vitrine> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Avaliação enviada com sucesso!'),
-          backgroundColor: Colors.green[800],
+          backgroundColor: primaryColor,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro ao enviar avaliação: $e'),
-          backgroundColor: Colors.red[700],
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -202,7 +215,7 @@ class _VitrineState extends State<Vitrine> {
             return AlertDialog(
               title: Text(
                 'Avaliar: $produtoNome',
-                style: const TextStyle(color: Color(0xFF1A1A1A)),
+                style: const TextStyle(color: textPrimary),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -213,7 +226,7 @@ class _VitrineState extends State<Vitrine> {
                       'Selecione sua nota:',
                       style: TextStyle(
                         fontSize: 16,
-                        color: const Color(0xFF4A4A4A),
+                        color: textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -231,7 +244,7 @@ class _VitrineState extends State<Vitrine> {
                             index < notaSelecionada
                                 ? Icons.star
                                 : Icons.star_border,
-                            color: const Color(0xFFF57C00),
+                            color: warningColor,
                             size: 40,
                           ),
                         );
@@ -243,15 +256,15 @@ class _VitrineState extends State<Vitrine> {
                       maxLines: 3,
                       decoration: InputDecoration(
                         labelText: 'Comentário (opcional)',
-                        labelStyle: const TextStyle(color: Color(0xFF6B6B6B)),
-                        border: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                        labelStyle: const TextStyle(color: textTertiary),
+                        border: const OutlineInputBorder(
+                          borderSide: BorderSide(color: borderColor),
                         ),
                         focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFF1565C0)),
+                          borderSide: BorderSide(color: primaryColor),
                         ),
                       ),
-                      style: const TextStyle(color: Color(0xFF4A4A4A)),
+                      style: const TextStyle(color: textSecondary),
                     ),
                     const SizedBox(height: 10),
                     if (_minhasAvaliacoes.containsKey(produtoId))
@@ -271,7 +284,7 @@ class _VitrineState extends State<Vitrine> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: const Text('Avaliação removida!'),
-                                backgroundColor: Colors.green[800],
+                                backgroundColor: primaryColor,
                               ),
                             );
                             Navigator.pop(context);
@@ -279,7 +292,7 @@ class _VitrineState extends State<Vitrine> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Erro ao remover avaliação: $e'),
-                                backgroundColor: Colors.red[700],
+                                backgroundColor: Colors.red,
                               ),
                             );
                           }
@@ -287,7 +300,7 @@ class _VitrineState extends State<Vitrine> {
                         child: Text(
                           'Remover minha avaliação',
                           style: TextStyle(
-                            color: Colors.red[700],
+                            color: Colors.red,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -300,7 +313,7 @@ class _VitrineState extends State<Vitrine> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(color: Color(0xFF6B6B6B)),
+                    style: TextStyle(color: textTertiary),
                   ),
                 ),
                 ElevatedButton(
@@ -309,7 +322,7 @@ class _VitrineState extends State<Vitrine> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('Selecione uma nota'),
-                          backgroundColor: Colors.orange[700],
+                          backgroundColor: warningColor,
                         ),
                       );
                       return;
@@ -323,7 +336,7 @@ class _VitrineState extends State<Vitrine> {
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1565C0),
+                    backgroundColor: primaryColor,
                   ),
                   child: const Text(
                     'Enviar Avaliação',
@@ -347,7 +360,7 @@ class _VitrineState extends State<Vitrine> {
         return AlertDialog(
           title: Text(
             'Avaliações: $produtoNome',
-            style: const TextStyle(color: Color(0xFF1A1A1A)),
+            style: const TextStyle(color: textPrimary),
           ),
           content: SizedBox(
             width: double.maxFinite,
@@ -355,7 +368,7 @@ class _VitrineState extends State<Vitrine> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Card(
-                  color: Colors.blue[50],
+                  color: const Color(0xFFF8F9FA),
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Row(
@@ -368,14 +381,14 @@ class _VitrineState extends State<Vitrine> {
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFFF57C00),
+                                color: warningColor,
                               ),
                             ),
                             Text(
                               'Média',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[700],
+                                color: textTertiary,
                               ),
                             ),
                           ],
@@ -387,14 +400,14 @@ class _VitrineState extends State<Vitrine> {
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1565C0),
+                                color: primaryColor,
                               ),
                             ),
                             Text(
                               'Avaliações',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[700],
+                                color: textTertiary,
                               ),
                             ),
                           ],
@@ -411,12 +424,12 @@ class _VitrineState extends State<Vitrine> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.star_border, size: 50, color: Colors.grey[500]),
+                              Icon(Icons.star_border, size: 50, color: textTertiary),
                               const SizedBox(height: 10),
                               const Text(
                                 'Seja o primeiro a avaliar!',
                                 style: TextStyle(
-                                  color: Color(0xFF6B6B6B),
+                                  color: textTertiary,
                                   fontSize: 16,
                                 ),
                               ),
@@ -434,11 +447,11 @@ class _VitrineState extends State<Vitrine> {
                               margin: const EdgeInsets.symmetric(vertical: 4),
                               child: ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: isMinhaAvaliacao ? Colors.green[100] : Colors.blue[100],
+                                  backgroundColor: isMinhaAvaliacao ? Colors.green[100] : const Color(0xFFF8F9FA),
                                   child: Icon(
                                     isMinhaAvaliacao ? Icons.person : Icons.person_outline,
                                     size: 20,
-                                    color: isMinhaAvaliacao ? Colors.green[800] : Colors.blue[800],
+                                    color: isMinhaAvaliacao ? successColor : primaryColor,
                                   ),
                                 ),
                                 title: Row(
@@ -447,7 +460,7 @@ class _VitrineState extends State<Vitrine> {
                                       starIndex < (avaliacao['nota'] ?? 0)
                                           ? Icons.star
                                           : Icons.star_border,
-                                      color: const Color(0xFFF57C00),
+                                      color: warningColor,
                                       size: 16,
                                     );
                                   }),
@@ -455,11 +468,11 @@ class _VitrineState extends State<Vitrine> {
                                 subtitle: avaliacao['comentario'] != null && avaliacao['comentario'].isNotEmpty
                                     ? Text(
                                         avaliacao['comentario'],
-                                        style: const TextStyle(color: Color(0xFF4A4A4A)),
+                                        style: const TextStyle(color: textSecondary),
                                       )
                                     : Text(
                                         'Sem comentário',
-                                        style: TextStyle(color: Colors.grey[600]),
+                                        style: TextStyle(color: textTertiary),
                                       ),
                                 trailing: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -468,7 +481,7 @@ class _VitrineState extends State<Vitrine> {
                                       '${avaliacao['nota'] ?? 0}/5',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1565C0),
+                                        color: primaryColor,
                                       ),
                                     ),
                                     if (isMinhaAvaliacao)
@@ -483,7 +496,7 @@ class _VitrineState extends State<Vitrine> {
                                           'Você',
                                           style: TextStyle(
                                             fontSize: 10,
-                                            color: Color(0xFF2E7D32),
+                                            color: successColor,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -502,7 +515,7 @@ class _VitrineState extends State<Vitrine> {
             ElevatedButton(
               onPressed: () => _mostrarDialogAvaliacao(produtoId, produtoNome),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF57C00),
+                backgroundColor: warningColor,
                 foregroundColor: Colors.white,
               ),
               child: const Row(
@@ -518,7 +531,7 @@ class _VitrineState extends State<Vitrine> {
               onPressed: () => Navigator.pop(context),
               child: const Text(
                 'Fechar',
-                style: TextStyle(color: Color(0xFF6B6B6B)),
+                style: TextStyle(color: textTertiary),
               ),
             ),
           ],
@@ -527,7 +540,7 @@ class _VitrineState extends State<Vitrine> {
     );
   }
 
-  // ===== FUNÇÕES DE CONTATO SIMPLIFICADAS =====
+  // FUNÇÕES DE CONTATO 
 
   Future<void> _abrirWhatsApp(String numero) async {
     try {
@@ -580,7 +593,7 @@ class _VitrineState extends State<Vitrine> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Abra o WhatsApp e envie mensagem para: $numero'),
-              backgroundColor: Colors.blue,
+              backgroundColor: primaryColor,
               duration: const Duration(seconds: 5),
             ),
           );
@@ -637,7 +650,7 @@ class _VitrineState extends State<Vitrine> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Envie um e-mail para: $email\nAssunto: $assunto'),
-              backgroundColor: Colors.blue,
+              backgroundColor: primaryColor,
               duration: const Duration(seconds: 5),
             ),
           );
@@ -749,17 +762,6 @@ class _VitrineState extends State<Vitrine> {
 
   @override
   Widget build(BuildContext context) {
-    const Color textPrimary = Color(0xFF1A1A1A); 
-    const Color textSecondary = Color(0xFF4A4A4A); 
-    const Color textTertiary = Color(0xFF6B6B6B); 
-    const Color textLight = Color(0xFF8A8A8A); 
-    const Color textSuccess = Color(0xFF2E7D32); 
-    const Color textError = Color(0xFFC62828); 
-    const Color textWarning = Color(0xFFF57C00); 
-    const Color textInfo = Color(0xFF1565C0); 
-    const Color cardBackground = Color(0xFFFFFCF8);
-    const Color borderColor = Color(0xFFE0E0E0);
-
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -772,8 +774,8 @@ class _VitrineState extends State<Vitrine> {
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Buscar Produto',
-                  hintStyle: const TextStyle(color: textLight),
-                  prefixIcon: const Icon(Icons.search, color: textTertiary),
+                  hintStyle: const TextStyle(color: textTertiary),
+                  prefixIcon: const Icon(Icons.search, color: textSecondary),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -782,7 +784,7 @@ class _VitrineState extends State<Vitrine> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
-                    borderSide: const BorderSide(color: textInfo, width: 1.5),
+                    borderSide: const BorderSide(color: primaryColor, width: 1.5),
                   ),
                 ),
                 style: const TextStyle(color: textPrimary),
@@ -817,7 +819,7 @@ class _VitrineState extends State<Vitrine> {
                                   borderSide: const BorderSide(color: borderColor),
                                 ),
                                 focusedBorder: const OutlineInputBorder(
-                                  borderSide: BorderSide(color: textInfo),
+                                  borderSide: BorderSide(color: primaryColor),
                                 ),
                               ),
                               style: const TextStyle(color: textPrimary),
@@ -834,7 +836,7 @@ class _VitrineState extends State<Vitrine> {
                                   borderSide: const BorderSide(color: borderColor),
                                 ),
                                 focusedBorder: const OutlineInputBorder(
-                                  borderSide: BorderSide(color: textInfo),
+                                  borderSide: BorderSide(color: primaryColor),
                                 ),
                               ),
                               style: const TextStyle(color: textPrimary),
@@ -862,7 +864,7 @@ class _VitrineState extends State<Vitrine> {
                               Navigator.pop(context);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: textInfo,
+                              backgroundColor: primaryColor,
                             ),
                             child: const Text(
                               'Aplicar',
@@ -875,7 +877,7 @@ class _VitrineState extends State<Vitrine> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: textInfo,
+                  backgroundColor: primaryColor,
                   foregroundColor: Colors.white,
                 ),
                 child: const Text('Filtrar por preço'),
@@ -885,7 +887,7 @@ class _VitrineState extends State<Vitrine> {
                 children: [
                   const Expanded(
                     child: Divider(
-                      color: textInfo,
+                      color: primaryColor,
                       thickness: 2,
                       endIndent: 10,
                     ),
@@ -893,14 +895,14 @@ class _VitrineState extends State<Vitrine> {
                   const Text(
                     "PRODUTOS",
                     style: TextStyle(
-                      color: textInfo,
+                      color: primaryColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
                   const Expanded(
                     child: Divider(
-                      color: textInfo,
+                      color: primaryColor,
                       thickness: 2,
                       indent: 10,
                     ),
@@ -910,7 +912,7 @@ class _VitrineState extends State<Vitrine> {
               const SizedBox(height: 15),
               Expanded(
                 child: loading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator(color: primaryColor))
                     : produtos.isEmpty
                         ? Center(
                             child: Text(
@@ -979,7 +981,7 @@ class _VitrineState extends State<Vitrine> {
                                                             child: Icon(
                                                               Icons.shopping_bag,
                                                               size: 50,
-                                                              color: textWarning,
+                                                              color: warningColor,
                                                             ),
                                                           ),
                                                         );
@@ -1015,7 +1017,7 @@ class _VitrineState extends State<Vitrine> {
                                                                     style: const TextStyle(
                                                                       fontSize: 18,
                                                                       fontWeight: FontWeight.bold,
-                                                                      color: textWarning,
+                                                                      color: warningColor,
                                                                     ),
                                                                   ),
                                                                   Text(
@@ -1031,7 +1033,7 @@ class _VitrineState extends State<Vitrine> {
                                                                     index < media.round()
                                                                         ? Icons.star
                                                                         : Icons.star_border,
-                                                                    color: textWarning,
+                                                                    color: warningColor,
                                                                     size: 20,
                                                                   );
                                                                 }),
@@ -1055,19 +1057,19 @@ class _VitrineState extends State<Vitrine> {
                                                                 label: const Text('Ver todas'),
                                                                 style: ElevatedButton.styleFrom(
                                                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                                  backgroundColor: textInfo,
+                                                                  backgroundColor: primaryColor,
                                                                   foregroundColor: Colors.white,
                                                                 ),
                                                               ),
                                                             ],
                                                           ),
                                                         ],
-                                                      ),
+                      ),
                                                       const SizedBox(height: 10),
                                                       ElevatedButton(
                                                         onPressed: () => _mostrarDialogAvaliacao(produtoId, p['name'] ?? 'Produto'),
                                                         style: ElevatedButton.styleFrom(
-                                                          backgroundColor: minhaAvaliacao != null ? textSuccess : textWarning,
+                                                          backgroundColor: minhaAvaliacao != null ? successColor : warningColor,
                                                           minimumSize: const Size(double.infinity, 40),
                                                         ),
                                                         child: Row(
@@ -1149,7 +1151,7 @@ class _VitrineState extends State<Vitrine> {
                                                       style: ElevatedButton
                                                           .styleFrom(
                                                         backgroundColor:
-                                                            textInfo,
+                                                            primaryColor,
                                                         shape:
                                                             RoundedRectangleBorder(
                                                           borderRadius:
@@ -1181,7 +1183,7 @@ class _VitrineState extends State<Vitrine> {
                                                       style: ElevatedButton
                                                           .styleFrom(
                                                         backgroundColor:
-                                                            textSuccess,
+                                                            successColor,
                                                         shape:
                                                             RoundedRectangleBorder(
                                                           borderRadius:
@@ -1198,7 +1200,7 @@ class _VitrineState extends State<Vitrine> {
                                                 child: Text(
                                                   "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
                                                   style: const TextStyle(
-                                                    color: textSuccess,
+                                                    color: successColor,
                                                     fontSize: 20,
                                                     fontWeight: FontWeight.bold,
                                                   ),
@@ -1211,15 +1213,146 @@ class _VitrineState extends State<Vitrine> {
                                     },
                                   );
                                 },
-                                child: _categoryCard(
-                                  imageUrl: imageUrl,
-                                  productName: p['name'] ?? 'Produto',
-                                  empresa: p['empresa_name'] ?? 'Empresa',
-                                  description: p['description'] ?? '',
-                                  price: p['value']?.toStringAsFixed(2) ?? '0.00',
-                                  avaliacao: _avaliacoesPorProduto[produtoId]?['media'] ?? 0.0,
-                                  totalAvaliacoes: _avaliacoesPorProduto[produtoId]?['total'] ?? 0,
-                                  minhaAvaliacao: _minhasAvaliacoes.containsKey(produtoId),
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: Colors.white,
+                                    border: Border.all(color: primaryColor.withOpacity(0.3)),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          imageUrl,
+                                          height: 70,
+                                          width: 70,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              p['name'] ?? "Sem nome",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                                color: textPrimary,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              p['empresa_name'] ?? "Empresa",
+                                              style: TextStyle(
+                                                color: textSecondary,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              p['description'] ?? "",
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(color: textTertiary, fontSize: 12),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Row(
+                                              children: [
+                                                Row(
+                                                  children: List.generate(5, (index) {
+                                                    return Icon(
+                                                      index < media.round()
+                                                          ? Icons.star
+                                                          : Icons.star_border,
+                                                      color: warningColor,
+                                                      size: 14,
+                                                    );
+                                                  }),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  '${media.toStringAsFixed(1)} ($totalAvaliacoes)',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: textTertiary,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                                if (_minhasAvaliacoes.containsKey(produtoId))
+                                                  Container(
+                                                    margin: const EdgeInsets.only(left: 6),
+                                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.green[50],
+                                                      borderRadius: BorderRadius.circular(4),
+                                                      border: Border.all(color: successColor.withOpacity(0.3)),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Icon(Icons.check, size: 10, color: successColor),
+                                                        const SizedBox(width: 2),
+                                                        const Text(
+                                                          'Você avaliou',
+                                                          style: TextStyle(
+                                                            fontSize: 9,
+                                                            color: successColor,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text(
+                                                  "R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
+                                                  style: const TextStyle(
+                                                    color: successColor,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                  decoration: BoxDecoration(
+                                                    color: primaryColor.withOpacity(0.1),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    border: Border.all(color: primaryColor.withOpacity(0.3)),
+                                                  ),
+                                                  child: Text(
+                                                    'Ver detalhes',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      color: primaryColor,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             },
@@ -1228,224 +1361,6 @@ class _VitrineState extends State<Vitrine> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _categoryCard({
-    required String imageUrl,
-    required String productName,
-    required String empresa,
-    required String description,
-    required String price,
-    double avaliacao = 0.0,
-    int totalAvaliacoes = 0,
-    bool minhaAvaliacao = false,
-  }) {
-    const Color textPrimary = Color(0xFF1A1A1A);
-    const Color textSecondary = Color(0xFF4A4A4A);
-    const Color textTertiary = Color(0xFF6B6B6B);
-    const Color textSuccess = Color(0xFF2E7D32);
-    const Color textWarning = Color(0xFFF57C00);
-    const Color textInfo = Color(0xFF1565C0);
-    const Color cardBackground = Color(0xFFFFFCF8);
-    const Color borderColor = Color(0xFFE0E0E0);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-        border: Border.all(color: borderColor, width: 0.5),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 90,
-            height: 90,
-            margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: textInfo,
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: Icon(
-                        Icons.shopping_bag,
-                        size: 40,
-                        color: textWarning,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  productName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: textPrimary,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                const SizedBox(height: 4),
-                
-                Text(
-                  empresa,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                const SizedBox(height: 4),
-                
-                if (description.isNotEmpty)
-                  Text(
-                    description.length > 50
-                        ? '${description.substring(0, 50)}...'
-                        : description,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: textTertiary,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                
-                const SizedBox(height: 6),
-                
-                Row(
-                  children: [
-                    Row(
-                      children: List.generate(5, (index) {
-                        return Icon(
-                          index < avaliacao.round()
-                              ? Icons.star
-                              : Icons.star_border,
-                          color: textWarning,
-                          size: 14,
-                        );
-                      }),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${avaliacao.toStringAsFixed(1)} ($totalAvaliacoes)',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: textTertiary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    if (minhaAvaliacao)
-                      Container(
-                        margin: const EdgeInsets.only(left: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: textSuccess.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check, size: 10, color: textSuccess),
-                            const SizedBox(width: 2),
-                            const Text(
-                              'Você avaliou',
-                              style: TextStyle(
-                                fontSize: 9,
-                                color: textSuccess,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-                
-                const SizedBox(height: 6),
-                
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'R\$ $price',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: textSuccess,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: textInfo.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: textInfo.withOpacity(0.3)),
-                      ),
-                      child: const Text(
-                        'Ver detalhes',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: textInfo,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

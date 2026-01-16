@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../utils/utils.dart';
 import 'estoque.dart';
 import 'vitrine.dart';
+import '../services/auth_service.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -12,7 +11,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final supabase = Supabase.instance.client;
+  final AuthService _authService = AuthService();
   final TextEditingController cnpjController = TextEditingController();
   final TextEditingController senhaController = TextEditingController();
 
@@ -32,37 +31,41 @@ class _LoginState extends State<Login> {
     setState(() => isLoading = true);
 
     try {
-      // Consulta a tabela 'empresas'
-      final response = await supabase
-          .from('empresas')
-          .select()
-          .eq('cnpj', cnpj)
-          .maybeSingle();
-
-      if (response == null) {
+      final success = await _authService.login(cnpj, senha);
+      
+      if (!success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Empresa não encontrada.')),
+          const SnackBar(content: Text('CNPJ ou senha incorretos!')),
         );
-      } else if (response['password'] != senha) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Senha incorreta.')),
-        );
-      } else {
-        // ✅ Login bem-sucedido → redireciona para o estoque
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bem-vindo, ${response['name']}!')),
-        );
-
-        // Passa o nome da empresa para a tela Estoque
-        redirect(context, Estoque(empresa: response['cnpj']));
+        setState(() => isLoading = false);
+        return;
       }
+
+      final usuario = await _authService.getUsuarioLogado();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Bem-vindo, ${usuario['nome']}!')),
+      );
+
+      // Navegar para estoque
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => Estoque(empresa: cnpj)),
+        (route) => false,
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro de login: $e')),
       );
-    } finally {
       setState(() => isLoading = false);
     }
+  }
+
+  // Método para navegar sem retorno
+  void _navigateTo(BuildContext context, Widget page) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => page),
+      (route) => false,
+    );
   }
 
   @override
@@ -159,7 +162,7 @@ class _LoginState extends State<Login> {
 
               // Acesso como cliente
               TextButton(
-                onPressed: () => redirect(context, const Vitrine()),
+                onPressed: () => _navigateTo(context, const Vitrine()),
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFF0093FF),
                   padding: const EdgeInsets.all(16),
