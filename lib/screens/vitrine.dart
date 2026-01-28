@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'theme_manager.dart';
 
 class Vitrine extends StatefulWidget {
   const Vitrine({super.key});
@@ -21,16 +23,6 @@ class _VitrineState extends State<Vitrine> {
   Map<String, Map<String, dynamic>> _avaliacoesPorProduto = {};
   Map<String, Map<String, dynamic>> _minhasAvaliacoes = {};
   String? _deviceId;
-
-  // Cores padrão (mesmo do estoque)
-  static const Color primaryColor = Color(0xFF0093FF);
-  static const Color primaryDark = Color(0xFF0066CC);
-  static const Color textPrimary = Color(0xFF333333);
-  static const Color textSecondary = Color(0xFF666666);
-  static const Color textTertiary = Color(0xFF999999);
-  static const Color successColor = Color(0xFF2E7D32);
-  static const Color warningColor = Color(0xFFF57C00);
-  static const Color borderColor = Color.fromARGB(255, 224, 224, 224);
 
   @override
   void initState() {
@@ -184,10 +176,11 @@ class _VitrineState extends State<Vitrine> {
       
       setState(() {});
 
+      final themeManager = Provider.of<ThemeManager>(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Avaliação enviada com sucesso!'),
-          backgroundColor: primaryColor,
+          backgroundColor: themeManager.primaryColor,
         ),
       );
     } catch (e) {
@@ -207,15 +200,18 @@ class _VitrineState extends State<Vitrine> {
       text: minhaAvaliacao?['comentario'] ?? '',
     );
 
+    final themeManager = Provider.of<ThemeManager>(context, listen: false);
+    
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: themeManager.dialogBgColor,
               title: Text(
                 'Avaliar: $produtoNome',
-                style: const TextStyle(color: textPrimary),
+                style: TextStyle(color: themeManager.textPrimary),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -226,7 +222,7 @@ class _VitrineState extends State<Vitrine> {
                       'Selecione sua nota:',
                       style: TextStyle(
                         fontSize: 16,
-                        color: textSecondary,
+                        color: themeManager.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -244,7 +240,7 @@ class _VitrineState extends State<Vitrine> {
                             index < notaSelecionada
                                 ? Icons.star
                                 : Icons.star_border,
-                            color: warningColor,
+                            color: themeManager.warningColor,
                             size: 40,
                           ),
                         );
@@ -254,17 +250,19 @@ class _VitrineState extends State<Vitrine> {
                     TextField(
                       controller: comentarioController,
                       maxLines: 3,
+                      style: TextStyle(color: themeManager.textPrimary),
                       decoration: InputDecoration(
                         labelText: 'Comentário (opcional)',
-                        labelStyle: const TextStyle(color: textTertiary),
-                        border: const OutlineInputBorder(
-                          borderSide: BorderSide(color: borderColor),
+                        labelStyle: TextStyle(color: themeManager.textTertiary),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: themeManager.inputBorderColor),
                         ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: themeManager.primaryColor),
                         ),
+                        filled: true,
+                        fillColor: themeManager.inputBgColor,
                       ),
-                      style: const TextStyle(color: textSecondary),
                     ),
                     const SizedBox(height: 10),
                     if (_minhasAvaliacoes.containsKey(produtoId))
@@ -284,7 +282,7 @@ class _VitrineState extends State<Vitrine> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: const Text('Avaliação removida!'),
-                                backgroundColor: primaryColor,
+                                backgroundColor: themeManager.primaryColor,
                               ),
                             );
                             Navigator.pop(context);
@@ -311,9 +309,9 @@ class _VitrineState extends State<Vitrine> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
+                  child: Text(
                     'Cancelar',
-                    style: TextStyle(color: textTertiary),
+                    style: TextStyle(color: themeManager.textTertiary),
                   ),
                 ),
                 ElevatedButton(
@@ -322,7 +320,7 @@ class _VitrineState extends State<Vitrine> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('Selecione uma nota'),
-                          backgroundColor: warningColor,
+                          backgroundColor: themeManager.warningColor,
                         ),
                       );
                       return;
@@ -336,7 +334,7 @@ class _VitrineState extends State<Vitrine> {
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
+                    backgroundColor: themeManager.primaryColor,
                   ),
                   child: const Text(
                     'Enviar Avaliação',
@@ -353,14 +351,16 @@ class _VitrineState extends State<Vitrine> {
 
   void _mostrarTodasAvaliacoes(String produtoId, String produtoNome) {
     final avaliacoes = _avaliacoesPorProduto[produtoId]?['avaliacoes'] ?? [];
+    final themeManager = Provider.of<ThemeManager>(context, listen: false);
     
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: themeManager.dialogBgColor,
           title: Text(
             'Avaliações: $produtoNome',
-            style: const TextStyle(color: textPrimary),
+            style: TextStyle(color: themeManager.textPrimary),
           ),
           content: SizedBox(
             width: double.maxFinite,
@@ -368,7 +368,7 @@ class _VitrineState extends State<Vitrine> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Card(
-                  color: const Color(0xFFF8F9FA),
+                  color: themeManager.cardBgColor,
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Row(
@@ -378,17 +378,17 @@ class _VitrineState extends State<Vitrine> {
                           children: [
                             Text(
                               _avaliacoesPorProduto[produtoId]?['media']?.toStringAsFixed(1) ?? '0.0',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: warningColor,
+                                color: themeManager.warningColor,
                               ),
                             ),
                             Text(
                               'Média',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: textTertiary,
+                                color: themeManager.textTertiary,
                               ),
                             ),
                           ],
@@ -397,17 +397,17 @@ class _VitrineState extends State<Vitrine> {
                           children: [
                             Text(
                               '${_avaliacoesPorProduto[produtoId]?['total'] ?? 0}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: primaryColor,
+                                color: themeManager.primaryColor,
                               ),
                             ),
                             Text(
                               'Avaliações',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: textTertiary,
+                                color: themeManager.textTertiary,
                               ),
                             ),
                           ],
@@ -424,12 +424,12 @@ class _VitrineState extends State<Vitrine> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.star_border, size: 50, color: textTertiary),
+                              Icon(Icons.star_border, size: 50, color: themeManager.textTertiary),
                               const SizedBox(height: 10),
-                              const Text(
+                              Text(
                                 'Seja o primeiro a avaliar!',
                                 style: TextStyle(
-                                  color: textTertiary,
+                                  color: themeManager.textTertiary,
                                   fontSize: 16,
                                 ),
                               ),
@@ -444,14 +444,15 @@ class _VitrineState extends State<Vitrine> {
                             final isMinhaAvaliacao = avaliacao['device_id'] == _deviceId;
                             
                             return Card(
+                              color: themeManager.cardBgColor,
                               margin: const EdgeInsets.symmetric(vertical: 4),
                               child: ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: isMinhaAvaliacao ? Colors.green[100] : const Color(0xFFF8F9FA),
+                                  backgroundColor: isMinhaAvaliacao ? Colors.green[100] : themeManager.scaffoldBgColor,
                                   child: Icon(
                                     isMinhaAvaliacao ? Icons.person : Icons.person_outline,
                                     size: 20,
-                                    color: isMinhaAvaliacao ? successColor : primaryColor,
+                                    color: isMinhaAvaliacao ? themeManager.successColor : themeManager.primaryColor,
                                   ),
                                 ),
                                 title: Row(
@@ -460,7 +461,7 @@ class _VitrineState extends State<Vitrine> {
                                       starIndex < (avaliacao['nota'] ?? 0)
                                           ? Icons.star
                                           : Icons.star_border,
-                                      color: warningColor,
+                                      color: themeManager.warningColor,
                                       size: 16,
                                     );
                                   }),
@@ -468,20 +469,20 @@ class _VitrineState extends State<Vitrine> {
                                 subtitle: avaliacao['comentario'] != null && avaliacao['comentario'].isNotEmpty
                                     ? Text(
                                         avaliacao['comentario'],
-                                        style: const TextStyle(color: textSecondary),
+                                        style: TextStyle(color: themeManager.textSecondary),
                                       )
                                     : Text(
                                         'Sem comentário',
-                                        style: TextStyle(color: textTertiary),
+                                        style: TextStyle(color: themeManager.textTertiary),
                                       ),
                                 trailing: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
                                       '${avaliacao['nota'] ?? 0}/5',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: primaryColor,
+                                        color: themeManager.primaryColor,
                                       ),
                                     ),
                                     if (isMinhaAvaliacao)
@@ -492,11 +493,11 @@ class _VitrineState extends State<Vitrine> {
                                           color: Colors.green[100],
                                           borderRadius: BorderRadius.circular(4),
                                         ),
-                                        child: const Text(
+                                        child: Text(
                                           'Você',
                                           style: TextStyle(
                                             fontSize: 10,
-                                            color: successColor,
+                                            color: themeManager.successColor,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -515,7 +516,7 @@ class _VitrineState extends State<Vitrine> {
             ElevatedButton(
               onPressed: () => _mostrarDialogAvaliacao(produtoId, produtoNome),
               style: ElevatedButton.styleFrom(
-                backgroundColor: warningColor,
+                backgroundColor: themeManager.warningColor,
                 foregroundColor: Colors.white,
               ),
               child: const Row(
@@ -529,9 +530,9 @@ class _VitrineState extends State<Vitrine> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
+              child: Text(
                 'Fechar',
-                style: TextStyle(color: textTertiary),
+                style: TextStyle(color: themeManager.textTertiary),
               ),
             ),
           ],
@@ -543,6 +544,7 @@ class _VitrineState extends State<Vitrine> {
   // FUNÇÕES DE CONTATO 
 
   Future<void> _abrirWhatsApp(String numero) async {
+    final themeManager = Provider.of<ThemeManager>(context, listen: false);
     try {
       if (numero.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -593,7 +595,7 @@ class _VitrineState extends State<Vitrine> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Abra o WhatsApp e envie mensagem para: $numero'),
-              backgroundColor: primaryColor,
+              backgroundColor: themeManager.primaryColor,
               duration: const Duration(seconds: 5),
             ),
           );
@@ -611,6 +613,7 @@ class _VitrineState extends State<Vitrine> {
   }
 
   Future<void> _enviarEmail(String email) async {
+    final themeManager = Provider.of<ThemeManager>(context, listen: false);
     try {
       if (email.isEmpty || !email.contains('@')) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -650,7 +653,7 @@ class _VitrineState extends State<Vitrine> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Envie um e-mail para: $email\nAssunto: $assunto'),
-              backgroundColor: primaryColor,
+              backgroundColor: themeManager.primaryColor,
               duration: const Duration(seconds: 5),
             ),
           );
@@ -762,603 +765,638 @@ class _VitrineState extends State<Vitrine> {
 
   @override
   Widget build(BuildContext context) {
+    final themeManager = Provider.of<ThemeManager>(context);
+    
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 15),
-              TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Buscar Produto',
-                  hintStyle: const TextStyle(color: textTertiary),
-                  prefixIcon: const Icon(Icons.search, color: textSecondary),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(25),
-                    borderSide: const BorderSide(color: borderColor),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(25),
-                    borderSide: const BorderSide(color: primaryColor, width: 1.5),
+      appBar: AppBar(
+        title: const Text('Vitrine de Produtos'),
+        backgroundColor: themeManager.cardBgColor,
+        foregroundColor: themeManager.textPrimary,
+        elevation: 0,
+        actions: [
+          // Botão de alternar tema
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: Icon(
+                themeManager.isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
+                size: 24,
+                color: themeManager.textPrimary,
+              ),
+              onPressed: () {
+                themeManager.toggleTheme();
+              },
+              tooltip: themeManager.isDarkMode ? 'Modo Claro' : 'Modo Escuro',
+            ),
+          ),
+        ],
+      ),
+      body: Container(
+        color: themeManager.scaffoldBgColor,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 15),
+                TextField(
+                  controller: _searchController,
+                  style: TextStyle(color: themeManager.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: 'Buscar Produto',
+                    hintStyle: TextStyle(color: themeManager.textTertiary),
+                    prefixIcon: Icon(Icons.search, color: themeManager.textSecondary),
+                    filled: true,
+                    fillColor: themeManager.inputBgColor,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: BorderSide(color: themeManager.inputBorderColor),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: BorderSide(color: themeManager.primaryColor, width: 1.5),
+                    ),
                   ),
                 ),
-                style: const TextStyle(color: textPrimary),
-              ),
-              const SizedBox(height: 25),
-              ElevatedButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      final TextEditingController minController =
-                          TextEditingController();
-                      final TextEditingController maxController =
-                          TextEditingController();
+                const SizedBox(height: 25),
+                ElevatedButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        final TextEditingController minController =
+                            TextEditingController();
+                        final TextEditingController maxController =
+                            TextEditingController();
 
-                      return AlertDialog(
-                        title: const Text(
-                          'Filtrar por preço',
-                          style: TextStyle(color: textPrimary),
-                        ),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextField(
-                              controller: minController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: 'Preço mínimo',
-                                labelStyle: const TextStyle(color: textTertiary),
-                                prefixIcon: const Icon(Icons.attach_money, color: textTertiary),
-                                border: OutlineInputBorder(
-                                  borderSide: const BorderSide(color: borderColor),
-                                ),
-                                focusedBorder: const OutlineInputBorder(
-                                  borderSide: BorderSide(color: primaryColor),
+                        return AlertDialog(
+                          backgroundColor: themeManager.dialogBgColor,
+                          title: Text(
+                            'Filtrar por preço',
+                            style: TextStyle(color: themeManager.textPrimary),
+                          ),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextField(
+                                controller: minController,
+                                keyboardType: TextInputType.number,
+                                style: TextStyle(color: themeManager.textPrimary),
+                                decoration: InputDecoration(
+                                  labelText: 'Preço mínimo',
+                                  labelStyle: TextStyle(color: themeManager.textTertiary),
+                                  prefixIcon: Icon(Icons.attach_money, color: themeManager.textTertiary),
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide(color: themeManager.inputBorderColor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: themeManager.primaryColor),
+                                  ),
+                                  filled: true,
+                                  fillColor: themeManager.inputBgColor,
                                 ),
                               ),
-                              style: const TextStyle(color: textPrimary),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: maxController,
+                                keyboardType: TextInputType.number,
+                                style: TextStyle(color: themeManager.textPrimary),
+                                decoration: InputDecoration(
+                                  labelText: 'Preço máximo',
+                                  labelStyle: TextStyle(color: themeManager.textTertiary),
+                                  prefixIcon: Icon(Icons.attach_money, color: themeManager.textTertiary),
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide(color: themeManager.inputBorderColor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: themeManager.primaryColor),
+                                  ),
+                                  filled: true,
+                                  fillColor: themeManager.inputBgColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(
+                                'Cancelar',
+                                style: TextStyle(color: themeManager.textTertiary),
+                              ),
                             ),
-                            const SizedBox(height: 10),
-                            TextField(
-                              controller: maxController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: 'Preço máximo',
-                                labelStyle: const TextStyle(color: textTertiary),
-                                prefixIcon: const Icon(Icons.attach_money, color: textTertiary),
-                                border: OutlineInputBorder(
-                                  borderSide: const BorderSide(color: borderColor),
-                                ),
-                                focusedBorder: const OutlineInputBorder(
-                                  borderSide: BorderSide(color: primaryColor),
-                                ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                final precoMin =
+                                    double.tryParse(minController.text) ?? 0;
+                                final precoMax =
+                                    double.tryParse(maxController.text) ??
+                                        double.infinity;
+
+                                await buscarProdutosPorFaixa(
+                                    precoMin, precoMax);
+                                Navigator.pop(context);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: themeManager.primaryColor,
                               ),
-                              style: const TextStyle(color: textPrimary),
+                              child: const Text(
+                                'Aplicar',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ],
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              'Cancelar',
-                              style: TextStyle(color: textTertiary),
-                            ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () async {
-                              final precoMin =
-                                  double.tryParse(minController.text) ?? 0;
-                              final precoMax =
-                                  double.tryParse(maxController.text) ??
-                                      double.infinity;
-
-                              await buscarProdutosPorFaixa(
-                                  precoMin, precoMax);
-                              Navigator.pop(context);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                            ),
-                            child: const Text(
-                              'Aplicar',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  foregroundColor: Colors.white,
+                        );
+                      },
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: themeManager.primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Filtrar por preço'),
                 ),
-                child: const Text('Filtrar por preço'),
-              ),
-              const SizedBox(height: 15),
-              Row(
-                children: [
-                  const Expanded(
-                    child: Divider(
-                      color: primaryColor,
-                      thickness: 2,
-                      endIndent: 10,
+                const SizedBox(height: 15),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(
+                        color: themeManager.primaryColor,
+                        thickness: 2,
+                        endIndent: 10,
+                      ),
                     ),
-                  ),
-                  const Text(
-                    "PRODUTOS",
-                    style: TextStyle(
-                      color: primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                    Text(
+                      "PRODUTOS",
+                      style: TextStyle(
+                        color: themeManager.primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                  const Expanded(
-                    child: Divider(
-                      color: primaryColor,
-                      thickness: 2,
-                      indent: 10,
+                    Expanded(
+                      child: Divider(
+                        color: themeManager.primaryColor,
+                        thickness: 2,
+                        indent: 10,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
-              Expanded(
-                child: loading
-                    ? const Center(child: CircularProgressIndicator(color: primaryColor))
-                    : produtos.isEmpty
-                        ? Center(
-                            child: Text(
-                              'Nenhum produto disponível',
-                              style: TextStyle(
-                                color: textTertiary,
-                                fontSize: 16,
+                  ],
+                ),
+                const SizedBox(height: 15),
+                Expanded(
+                  child: loading
+                      ? Center(child: CircularProgressIndicator(color: themeManager.primaryColor))
+                      : produtos.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Nenhum produto disponível',
+                                style: TextStyle(
+                                  color: themeManager.textTertiary,
+                                  fontSize: 16,
+                                ),
                               ),
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: produtos.length,
-                            itemBuilder: (context, index) {
-                              final p = produtos[index];
-                              final produtoId = p['lote'];
-                              final avaliacoes = _avaliacoesPorProduto[produtoId];
-                              final media = avaliacoes?['media'] ?? 0.0;
-                              final totalAvaliacoes = avaliacoes?['total'] ?? 0;
-                              final minhaAvaliacao = _minhasAvaliacoes[produtoId];
-                              
-                              final imageUrl = p['photo_url'] ??
-                                  'https://cdn-icons-png.flaticon.com/512/1170/1170576.png';
+                            )
+                          : ListView.builder(
+                              itemCount: produtos.length,
+                              itemBuilder: (context, index) {
+                                final p = produtos[index];
+                                final produtoId = p['lote'];
+                                final avaliacoes = _avaliacoesPorProduto[produtoId];
+                                final media = avaliacoes?['media'] ?? 0.0;
+                                final totalAvaliacoes = avaliacoes?['total'] ?? 0;
+                                final minhaAvaliacao = _minhasAvaliacoes[produtoId];
+                                
+                                final imageUrl = p['photo_url'] ??
+                                    'https://cdn-icons-png.flaticon.com/512/1170/1170576.png';
 
-                              return GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text(
-                                          p['name'] ?? 'Produto',
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            color: textPrimary,
-                                            fontWeight: FontWeight.bold,
+                                return GestureDetector(
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          backgroundColor: themeManager.dialogBgColor,
+                                          title: Text(
+                                            p['name'] ?? 'Produto',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: themeManager.textPrimary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                        ),
-                                        content: SingleChildScrollView(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Center(
-                                                child: Container(
-                                                  height: 150,
-                                                  width: 150,
-                                                  decoration: BoxDecoration(
-                                                    borderRadius: BorderRadius.circular(12),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Colors.grey.withOpacity(0.3),
-                                                        blurRadius: 5,
-                                                        offset: const Offset(0, 3),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  child: ClipRRect(
-                                                    borderRadius: BorderRadius.circular(12),
-                                                    child: Image.network(
-                                                      imageUrl,
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder: (context, error, stack) {
-                                                        return Container(
-                                                          color: Colors.grey[200],
-                                                          child: Center(
-                                                            child: Icon(
-                                                              Icons.shopping_bag,
-                                                              size: 50,
-                                                              color: warningColor,
+                                          content: SingleChildScrollView(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Center(
+                                                  child: Container(
+                                                    height: 150,
+                                                    width: 150,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.grey.withOpacity(0.3),
+                                                          blurRadius: 5,
+                                                          offset: const Offset(0, 3),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: ClipRRect(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                      child: Image.network(
+                                                        imageUrl,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (context, error, stack) {
+                                                          return Container(
+                                                            color: Colors.grey[200],
+                                                            child: Center(
+                                                              child: Icon(
+                                                                Icons.shopping_bag,
+                                                                size: 50,
+                                                                color: themeManager.warningColor,
+                                                              ),
                                                             ),
-                                                          ),
-                                                        );
-                                                      },
+                                                          );
+                                                        },
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              
-                                              Card(
-                                                child: Padding(
-                                                  padding: const EdgeInsets.all(12.0),
-                                                  child: Column(
-                                                    children: [
-                                                      Row(
-                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                        children: [
-                                                          Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              Row(
-                                                                children: [
-                                                                  Text(
-                                                                    'Avaliação: ',
-                                                                    style: TextStyle(
-                                                                      fontWeight: FontWeight.w600,
-                                                                      color: textSecondary,
-                                                                    ),
-                                                                  ),
-                                                                  Text(
-                                                                    media.toStringAsFixed(1),
-                                                                    style: const TextStyle(
-                                                                      fontSize: 18,
-                                                                      fontWeight: FontWeight.bold,
-                                                                      color: warningColor,
-                                                                    ),
-                                                                  ),
-                                                                  Text(
-                                                                    '/5',
-                                                                    style: TextStyle(color: textSecondary),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              const SizedBox(height: 4),
-                                                              Row(
-                                                                children: List.generate(5, (index) {
-                                                                  return Icon(
-                                                                    index < media.round()
-                                                                        ? Icons.star
-                                                                        : Icons.star_border,
-                                                                    color: warningColor,
-                                                                    size: 20,
-                                                                  );
-                                                                }),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.end,
-                                                            children: [
-                                                              Text(
-                                                                '$totalAvaliacoes avaliação${totalAvaliacoes != 1 ? 'es' : ''}',
-                                                                style: TextStyle(
-                                                                  color: textTertiary,
-                                                                  fontSize: 12,
-                                                                ),
-                                                              ),
-                                                              const SizedBox(height: 8),
-                                                              ElevatedButton.icon(
-                                                                onPressed: () => _mostrarTodasAvaliacoes(produtoId, p['name'] ?? 'Produto'),
-                                                                icon: const Icon(Icons.rate_review, size: 16, color: Colors.white),
-                                                                label: const Text('Ver todas'),
-                                                                style: ElevatedButton.styleFrom(
-                                                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                                  backgroundColor: primaryColor,
-                                                                  foregroundColor: Colors.white,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                      ),
-                                                      const SizedBox(height: 10),
-                                                      ElevatedButton(
-                                                        onPressed: () => _mostrarDialogAvaliacao(produtoId, p['name'] ?? 'Produto'),
-                                                        style: ElevatedButton.styleFrom(
-                                                          backgroundColor: minhaAvaliacao != null ? successColor : warningColor,
-                                                          minimumSize: const Size(double.infinity, 40),
-                                                        ),
-                                                        child: Row(
-                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                const SizedBox(height: 10),
+                                                
+                                                Card(
+                                                  color: themeManager.cardBgColor,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(12.0),
+                                                    child: Column(
+                                                      children: [
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                           children: [
-                                                            Icon(
-                                                              minhaAvaliacao != null ? Icons.star : Icons.star_border,
-                                                              color: Colors.white,
+                                                            Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                Row(
+                                                                  children: [
+                                                                    Text(
+                                                                      'Avaliação: ',
+                                                                      style: TextStyle(
+                                                                        fontWeight: FontWeight.w600,
+                                                                        color: themeManager.textSecondary,
+                                                                      ),
+                                                                    ),
+                                                                    Text(
+                                                                      media.toStringAsFixed(1),
+                                                                      style: TextStyle(
+                                                                        fontSize: 18,
+                                                                        fontWeight: FontWeight.bold,
+                                                                        color: themeManager.warningColor,
+                                                                      ),
+                                                                    ),
+                                                                    Text(
+                                                                      '/5',
+                                                                      style: TextStyle(color: themeManager.textSecondary),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                const SizedBox(height: 4),
+                                                                Row(
+                                                                  children: List.generate(5, (index) {
+                                                                    return Icon(
+                                                                      index < media.round()
+                                                                          ? Icons.star
+                                                                          : Icons.star_border,
+                                                                      color: themeManager.warningColor,
+                                                                      size: 20,
+                                                                    );
+                                                                  }),
+                                                                ),
+                                                              ],
                                                             ),
-                                                            const SizedBox(width: 8),
-                                                            Text(
-                                                              minhaAvaliacao != null 
-                                                                  ? 'Sua avaliação: ${minhaAvaliacao['nota']}/5'
-                                                                  : 'Avaliar este produto',
-                                                              style: const TextStyle(
-                                                                color: Colors.white,
-                                                                fontWeight: FontWeight.w500,
-                                                              ),
+                                                            Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.end,
+                                                              children: [
+                                                                Text(
+                                                                  '$totalAvaliacoes avaliação${totalAvaliacoes != 1 ? 'es' : ''}',
+                                                                  style: TextStyle(
+                                                                    color: themeManager.textTertiary,
+                                                                    fontSize: 12,
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(height: 8),
+                                                                ElevatedButton.icon(
+                                                                  onPressed: () => _mostrarTodasAvaliacoes(produtoId, p['name'] ?? 'Produto'),
+                                                                  icon: const Icon(Icons.rate_review, size: 16, color: Colors.white),
+                                                                  label: const Text('Ver todas'),
+                                                                  style: ElevatedButton.styleFrom(
+                                                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                                    backgroundColor: themeManager.primaryColor,
+                                                                    foregroundColor: Colors.white,
+                                                                  ),
+                                                                ),
+                                                              ],
                                                             ),
                                                           ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              
-                                              Text(
-                                                "Empresa: ${p['empresa_name']}",
-                                                style: TextStyle(
-                                                  color: textSecondary,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 5),
-                                              Text(
-                                                "Quantidade: ${p['quantity']}",
-                                                style: const TextStyle(color: textSecondary),
-                                              ),
-                                              const SizedBox(height: 5),
-                                              Text(
-                                                "Descrição: ${p['description'] ?? 'Sem descrição'}",
-                                                style: const TextStyle(color: textSecondary),
-                                              ),
-                                              const SizedBox(height: 5),
-                                              if (p['expiration_date'] != null)
-                                                Text(
-                                                  "Validade: ${p['expiration_date']}",
-                                                  style: const TextStyle(color: textSecondary),
-                                                ),
-                                              const SizedBox(height: 5),
-                                              Text(
-                                                "Endereço: ${p['empresa_locate']}",
-                                                style: const TextStyle(color: textSecondary),
-                                              ),
-                                              const SizedBox(height: 15),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceEvenly,
-                                                children: [
-                                                  if (p['empresa_email'] != null && p['empresa_email'].isNotEmpty)
-                                                    ElevatedButton.icon(
-                                                      onPressed: () =>
-                                                          _enviarEmail(
-                                                              p['empresa_email']),
-                                                      icon: const Icon(
-                                                          Icons.email,
-                                                          color: Colors.white),
-                                                      label: const Text(
-                                                        "Email",
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontWeight: FontWeight.bold,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                        backgroundColor:
-                                                            primaryColor,
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      12),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  if (p['empresa_cellphone'] != null && p['empresa_cellphone'].isNotEmpty)
-                                                    ElevatedButton.icon(
-                                                      onPressed: () =>
-                                                          _abrirWhatsApp(
-                                                              p[
-                                                                  'empresa_cellphone']),
-                                                      icon: const FaIcon(
-                                                        FontAwesomeIcons
-                                                            .whatsapp,
-                                                        color: Colors.white,
-                                                      ),
-                                                      label: const Text(
-                                                        "WhatsApp",
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontWeight: FontWeight.bold,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                        backgroundColor:
-                                                            successColor,
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      12),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Center(
-                                                child: Text(
-                                                  "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
-                                                  style: const TextStyle(
-                                                    color: successColor,
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                                child: Container(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: Colors.white,
-                                    border: Border.all(color: primaryColor.withOpacity(0.3)),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.1),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.network(
-                                          imageUrl,
-                                          height: 70,
-                                          width: 70,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              p['name'] ?? "Sem nome",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                                color: textPrimary,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              p['empresa_name'] ?? "Empresa",
-                                              style: TextStyle(
-                                                color: textSecondary,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              p['description'] ?? "",
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(color: textTertiary, fontSize: 12),
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Row(
-                                              children: [
-                                                Row(
-                                                  children: List.generate(5, (index) {
-                                                    return Icon(
-                                                      index < media.round()
-                                                          ? Icons.star
-                                                          : Icons.star_border,
-                                                      color: warningColor,
-                                                      size: 14,
-                                                    );
-                                                  }),
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  '${media.toStringAsFixed(1)} ($totalAvaliacoes)',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: textTertiary,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                                if (_minhasAvaliacoes.containsKey(produtoId))
-                                                  Container(
-                                                    margin: const EdgeInsets.only(left: 6),
-                                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.green[50],
-                                                      borderRadius: BorderRadius.circular(4),
-                                                      border: Border.all(color: successColor.withOpacity(0.3)),
-                                                    ),
-                                                    child: Row(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        Icon(Icons.check, size: 10, color: successColor),
-                                                        const SizedBox(width: 2),
-                                                        const Text(
-                                                          'Você avaliou',
-                                                          style: TextStyle(
-                                                            fontSize: 9,
-                                                            color: successColor,
-                                                            fontWeight: FontWeight.bold,
+                        ),
+                                                        const SizedBox(height: 10),
+                                                        ElevatedButton(
+                                                          onPressed: () => _mostrarDialogAvaliacao(produtoId, p['name'] ?? 'Produto'),
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor: minhaAvaliacao != null ? themeManager.successColor : themeManager.warningColor,
+                                                            minimumSize: const Size(double.infinity, 40),
+                                                          ),
+                                                          child: Row(
+                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                            children: [
+                                                              Icon(
+                                                                minhaAvaliacao != null ? Icons.star : Icons.star_border,
+                                                                color: Colors.white,
+                                                              ),
+                                                              const SizedBox(width: 8),
+                                                              Text(
+                                                                minhaAvaliacao != null 
+                                                                    ? 'Sua avaliação: ${minhaAvaliacao['nota']}/5'
+                                                                    : 'Avaliar este produto',
+                                                                style: const TextStyle(
+                                                                  color: Colors.white,
+                                                                  fontWeight: FontWeight.w500,
+                                                                ),
+                                                              ),
+                                                            ],
                                                           ),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
+                                                ),
+                                                const SizedBox(height: 10),
+                                                
                                                 Text(
-                                                  "R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
-                                                  style: const TextStyle(
-                                                    color: successColor,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
+                                                  "Empresa: ${p['empresa_name']}",
+                                                  style: TextStyle(
+                                                    color: themeManager.textSecondary,
+                                                    fontWeight: FontWeight.w500,
                                                   ),
                                                 ),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color: primaryColor.withOpacity(0.1),
-                                                    borderRadius: BorderRadius.circular(12),
-                                                    border: Border.all(color: primaryColor.withOpacity(0.3)),
+                                                const SizedBox(height: 5),
+                                                Text(
+                                                  "Quantidade: ${p['quantity']}",
+                                                  style: TextStyle(color: themeManager.textSecondary),
+                                                ),
+                                                const SizedBox(height: 5),
+                                                Text(
+                                                  "Descrição: ${p['description'] ?? 'Sem descrição'}",
+                                                  style: TextStyle(color: themeManager.textSecondary),
+                                                ),
+                                                const SizedBox(height: 5),
+                                                if (p['expiration_date'] != null)
+                                                  Text(
+                                                    "Validade: ${p['expiration_date']}",
+                                                    style: TextStyle(color: themeManager.textSecondary),
                                                   ),
+                                                const SizedBox(height: 5),
+                                                Text(
+                                                  "Endereço: ${p['empresa_locate']}",
+                                                  style: TextStyle(color: themeManager.textSecondary),
+                                                ),
+                                                const SizedBox(height: 15),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceEvenly,
+                                                  children: [
+                                                    if (p['empresa_email'] != null && p['empresa_email'].isNotEmpty)
+                                                      ElevatedButton.icon(
+                                                        onPressed: () =>
+                                                            _enviarEmail(
+                                                                p['empresa_email']),
+                                                        icon: const Icon(
+                                                            Icons.email,
+                                                            color: Colors.white),
+                                                        label: const Text(
+                                                          "Email",
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          backgroundColor:
+                                                              themeManager.primaryColor,
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    if (p['empresa_cellphone'] != null && p['empresa_cellphone'].isNotEmpty)
+                                                      ElevatedButton.icon(
+                                                        onPressed: () =>
+                                                            _abrirWhatsApp(
+                                                                p[
+                                                                    'empresa_cellphone']),
+                                                        icon: const FaIcon(
+                                                          FontAwesomeIcons
+                                                              .whatsapp,
+                                                          color: Colors.white,
+                                                        ),
+                                                        label: const Text(
+                                                          "WhatsApp",
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          backgroundColor:
+                                                              themeManager.successColor,
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 20),
+                                                Center(
                                                   child: Text(
-                                                    'Ver detalhes',
+                                                    "Preço: R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
                                                     style: TextStyle(
-                                                      fontSize: 11,
-                                                      color: primaryColor,
-                                                      fontWeight: FontWeight.w600,
+                                                      color: themeManager.successColor,
+                                                      fontSize: 20,
+                                                      fontWeight: FontWeight.bold,
                                                     ),
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                          ],
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: themeManager.cardBgColor,
+                                      border: Border.all(color: themeManager.primaryColor.withOpacity(0.3)),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.1),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.network(
+                                            imageUrl,
+                                            height: 70,
+                                            width: 70,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                p['name'] ?? "Sem nome",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: themeManager.textPrimary,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                p['empresa_name'] ?? "Empresa",
+                                                style: TextStyle(
+                                                  color: themeManager.textSecondary,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                p['description'] ?? "",
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(color: themeManager.textTertiary, fontSize: 12),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Row(
+                                                children: [
+                                                  Row(
+                                                    children: List.generate(5, (index) {
+                                                      return Icon(
+                                                        index < media.round()
+                                                            ? Icons.star
+                                                            : Icons.star_border,
+                                                        color: themeManager.warningColor,
+                                                        size: 14,
+                                                      );
+                                                    }),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    '${media.toStringAsFixed(1)} ($totalAvaliacoes)',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      color: themeManager.textTertiary,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                  if (_minhasAvaliacoes.containsKey(produtoId))
+                                                    Container(
+                                                      margin: const EdgeInsets.only(left: 6),
+                                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.green[50],
+                                                        borderRadius: BorderRadius.circular(4),
+                                                        border: Border.all(color: themeManager.successColor.withOpacity(0.3)),
+                                                      ),
+                                                      child: Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Icon(Icons.check, size: 10, color: themeManager.successColor),
+                                                          const SizedBox(width: 2),
+                                                          const Text(
+                                                            'Você avaliou',
+                                                            style: TextStyle(
+                                                              fontSize: 9,
+                                                              color: Colors.green,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    "R\$ ${p['value']?.toStringAsFixed(2) ?? '0.00'}",
+                                                    style: TextStyle(
+                                                      color: themeManager.successColor,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: themeManager.primaryColor.withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(12),
+                                                      border: Border.all(color: themeManager.primaryColor.withOpacity(0.3)),
+                                                    ),
+                                                    child: Text(
+                                                      'Ver detalhes',
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        color: themeManager.primaryColor,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          ),
-              ),
-            ],
+                                );
+                              },
+                            ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

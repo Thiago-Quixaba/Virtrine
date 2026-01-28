@@ -1,9 +1,12 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'screens/login.dart';
 import 'screens/estoque.dart';
 import 'services/auth_service.dart';
+import 'screens/theme_manager.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,9 +28,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const AuthWrapper(),
+    return ChangeNotifierProvider(
+      create: (context) => ThemeManager(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: const AuthWrapper(),
+      ),
     );
   }
 }
@@ -71,20 +77,39 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final themeManager = Provider.of<ThemeManager>(context);
+    
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: themeManager.isDarkMode ? themeManager.darkTheme : themeManager.lightTheme,
+      home: _buildContent(themeManager),
+    );
+  }
+
+  Widget _buildContent(ThemeManager themeManager) {
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 20),
-              Text(
-                'Carregando...',
-                style: TextStyle(fontSize: 16),
+      return Scaffold(
+        body: Container(
+          color: themeManager.scaffoldBgColor,
+          child: SafeArea(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    color: themeManager.primaryColor,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Carregando...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: themeManager.textPrimary,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       );

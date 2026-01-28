@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'estoque.dart';
 import 'vitrine.dart';
 import '../services/auth_service.dart';
+import 'theme_manager.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -16,6 +19,7 @@ class _LoginState extends State<Login> {
   final TextEditingController senhaController = TextEditingController();
 
   bool isLoading = false;
+  bool _senhaVisivel = false; // Nova variável para controlar visibilidade da senha
 
   Future<void> loginEmpresa() async {
     final cnpj = cnpjController.text.trim();
@@ -32,7 +36,7 @@ class _LoginState extends State<Login> {
 
     try {
       final success = await _authService.login(cnpj, senha);
-      
+
       if (!success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('CNPJ ou senha incorretos!')),
@@ -42,14 +46,16 @@ class _LoginState extends State<Login> {
       }
 
       final usuario = await _authService.getUsuarioLogado();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Bem-vindo, ${usuario['nome']}!')),
       );
 
-      // Navegar para estoque
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => Estoque(empresa: cnpj)),
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Estoque(empresa: cnpj),
+        ),
         (route) => false,
       );
     } catch (e) {
@@ -60,116 +66,170 @@ class _LoginState extends State<Login> {
     }
   }
 
-  // Método para navegar sem retorno
-  void _navigateTo(BuildContext context, Widget page) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => page),
-      (route) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final themeManager = Provider.of<ThemeManager>(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/images/logo.png',
-                width: 200,
-                height: 200,
-              ),
-              const SizedBox(height: 20),
-
-              // Campo de CNPJ
-              SizedBox(
-                width: 300,
-                child: TextField(
-                  controller: cnpjController,
-                  decoration: InputDecoration(
-                    labelText: 'CNPJ',
-                    labelStyle: const TextStyle(color: Color(0xFF0093FF)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF0093FF),
-                        width: 2,
-                      ),
+      appBar: AppBar(
+        backgroundColor: themeManager.cardBgColor,
+        foregroundColor: themeManager.textPrimary,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(
+              themeManager.isDarkMode
+                  ? Icons.wb_sunny
+                  : Icons.nightlight_round,
+              color: themeManager.textPrimary,
+            ),
+            tooltip:
+                themeManager.isDarkMode ? 'Modo Claro' : 'Modo Escuro',
+            onPressed: themeManager.toggleTheme,
+          ),
+        ],
+      ),
+      body: Container(
+        color: themeManager.scaffoldBgColor,
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  /// LOGO
+                  SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.contain,
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
-                        width: 2,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// CNPJ
+                  SizedBox(
+                    width: 300,
+                    child: TextField(
+                      controller: cnpjController,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(color: themeManager.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'CNPJ',
+                        labelStyle:
+                            TextStyle(color: themeManager.primaryColor),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: themeManager.primaryColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: themeManager.primaryColor),
+                        ),
+                        filled: true,
+                        fillColor: themeManager.inputBgColor,
                       ),
                     ),
                   ),
-                ),
-              ),
 
-              const SizedBox(height: 15),
+                  const SizedBox(height: 15),
 
-              // Campo de Senha
-              SizedBox(
-                width: 300,
-                child: TextField(
-                  controller: senhaController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'SENHA',
-                    labelStyle: const TextStyle(color: Color(0xFF0093FF)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF0093FF),
-                        width: 2,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
-                        width: 2,
+                  /// SENHA COM OLHINHO
+                  SizedBox(
+                    width: 300,
+                    child: TextField(
+                      controller: senhaController,
+                      obscureText: !_senhaVisivel, // Invertido para funcionar corretamente
+                      style: TextStyle(color: themeManager.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'SENHA',
+                        labelStyle:
+                            TextStyle(color: themeManager.primaryColor),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: themeManager.primaryColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: themeManager.primaryColor),
+                        ),
+                        filled: true,
+                        fillColor: themeManager.inputBgColor,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _senhaVisivel
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: themeManager.primaryColor,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _senhaVisivel = !_senhaVisivel;
+                            });
+                          },
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
 
-              const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-              // Botão de login
-              ElevatedButton(
-                onPressed: isLoading ? null : loginEmpresa,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0093FF),
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  /// BOTÃO ENTRAR
+                  ElevatedButton(
+                    onPressed: isLoading ? null : loginEmpresa,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: themeManager.primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 15,
+                        horizontal: 40,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'ENTRAR',
+                            style: TextStyle(fontSize: 16),
+                          ),
                   ),
-                ),
-                child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('ENTRAR', style: TextStyle(fontSize: 16)),
-              ),
 
-              const SizedBox(height: 202),
+                  const SizedBox(height: 200),
 
-              // Acesso como cliente
-              TextButton(
-                onPressed: () => _navigateTo(context, const Vitrine()),
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF0093FF),
-                  padding: const EdgeInsets.all(16),
-                ),
-                child: const Text('Acessar como cliente'),
+                  /// ACESSAR COMO CLIENTE
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Vitrine(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Acessar como cliente',
+                      style:
+                          TextStyle(color: themeManager.primaryColor),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

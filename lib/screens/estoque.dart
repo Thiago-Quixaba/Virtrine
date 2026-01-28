@@ -5,8 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'login.dart';
 import '../services/auth_service.dart';
+import 'theme_manager.dart';
 
 class Estoque extends StatefulWidget {
   final String empresa;
@@ -69,26 +71,31 @@ class _EstoqueState extends State<Estoque> {
 
   // Método para fazer logout
   Future<void> _logout() async {
+    final themeManager = Provider.of<ThemeManager>(context, listen: false);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(
+        backgroundColor: themeManager.dialogBgColor,
+        title: Text(
           'Sair da conta',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Color(0xFF0093FF),
+            color: themeManager.primaryColor,
           ),
         ),
-        content: const Text(
+        content: Text(
           'Deseja realmente sair da sua conta?',
-          style: TextStyle(fontSize: 16),
+          style: TextStyle(fontSize: 16, color: themeManager.textPrimary),
         ),
         actions: [
-          // Botão Cancelar - Azul suave
+          // Botão Cancelar
           Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)],
+              gradient: LinearGradient(
+                colors: [
+                  themeManager.primaryColor.withOpacity(0.1),
+                  themeManager.primaryColor.withOpacity(0.2)
+                ],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
@@ -97,7 +104,7 @@ class _EstoqueState extends State<Estoque> {
             child: TextButton(
               onPressed: () => Navigator.pop(context, false),
               style: TextButton.styleFrom(
-                foregroundColor: Color(0xFF1565C0),
+                foregroundColor: themeManager.primaryColor,
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
                 elevation: 0,
@@ -106,27 +113,28 @@ class _EstoqueState extends State<Estoque> {
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              child: const Text(
+              child: Text(
                 'Cancelar',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
+                  color: themeManager.textPrimary,
                 ),
               ),
             ),
           ),
-          // Botão Sair - Gradiente azul vibrante
+          // Botão Sair
           Container(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0093FF), Color(0xFF0066CC)],
+              gradient: LinearGradient(
+                colors: [themeManager.primaryColor, themeManager.primaryColorDark],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
               borderRadius: BorderRadius.circular(8),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF0093FF).withOpacity(0.3),
+                  color: themeManager.primaryColor.withOpacity(0.3),
                   blurRadius: 6,
                   offset: const Offset(0, 3),
                 ),
@@ -169,9 +177,6 @@ class _EstoqueState extends State<Estoque> {
       );
     }
   }
-
-  // ... RESTANTE DO CÓDIGO PERMANECE IGUAL (apenas copie da versão anterior) ...
-  // Continuando daqui...
 
   Future<void> carregarProdutos() async {
     setState(() => loading = true);
@@ -394,10 +399,11 @@ class _EstoqueState extends State<Estoque> {
         }
       }
 
+      final themeManager = Provider.of<ThemeManager>(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Produto "${produto['name']}" excluído!'),
-          backgroundColor: const Color(0xFF0093FF),
+          backgroundColor: themeManager.primaryColor,
         ),
       );
       carregarProdutos();
@@ -413,12 +419,13 @@ class _EstoqueState extends State<Estoque> {
 
   // Widget para criar label com asterisco para campos obrigatórios
   Widget _labelComAsterisco(String texto, {bool obrigatorio = true}) {
+    final themeManager = Provider.of<ThemeManager>(context);
     return RichText(
       text: TextSpan(
         children: [
           TextSpan(
             text: texto,
-            style: const TextStyle(color: Colors.black87),
+            style: TextStyle(color: themeManager.textPrimary),
           ),
           if (obrigatorio)
             const TextSpan(
@@ -477,14 +484,17 @@ class _EstoqueState extends State<Estoque> {
     final tagsController = TextEditingController(
         text: produto != null ? (produto['tags'] as List).join(', ') : '');
 
+    final themeManager = Provider.of<ThemeManager>(context, listen: false);
+    
     showDialog(
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
+          backgroundColor: themeManager.dialogBgColor,
           title: Text(
             produto != null ? "Editar Produto" : "Novo Produto",
-            style: const TextStyle(
-              color: Color(0xFF0093FF),
+            style: TextStyle(
+              color: themeManager.primaryColor,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -496,15 +506,19 @@ class _EstoqueState extends State<Estoque> {
                 TextField(
                   controller: loteController,
                   enabled: produto == null,
+                  style: TextStyle(color: themeManager.textPrimary),
                   decoration: InputDecoration(
                     label: _labelComAsterisco("Lote", obrigatorio: produto == null),
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    border: OutlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.inputBorderColor),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF0093FF)),
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: themeManager.primaryColor),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
+                    filled: true,
+                    fillColor: themeManager.inputBgColor,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -512,15 +526,19 @@ class _EstoqueState extends State<Estoque> {
                 // NOME (Obrigatório)
                 TextField(
                   controller: nomeController,
+                  style: TextStyle(color: themeManager.textPrimary),
                   decoration: InputDecoration(
                     label: _labelComAsterisco("Nome"),
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    border: OutlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.inputBorderColor),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF0093FF)),
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: themeManager.primaryColor),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
+                    filled: true,
+                    fillColor: themeManager.inputBgColor,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -528,15 +546,19 @@ class _EstoqueState extends State<Estoque> {
                 // VALOR DE VENDA (Obrigatório)
                 TextField(
                   controller: valorController,
+                  style: TextStyle(color: themeManager.textPrimary),
                   decoration: InputDecoration(
                     label: _labelComAsterisco("Valor de Venda"),
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    border: OutlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.inputBorderColor),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF0093FF)),
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: themeManager.primaryColor),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
+                    filled: true,
+                    fillColor: themeManager.inputBgColor,
                   ),
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                 ),
@@ -545,15 +567,20 @@ class _EstoqueState extends State<Estoque> {
                 // CUSTO ORIGINAL (Opcional)
                 TextField(
                   controller: custoController,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: themeManager.textPrimary),
+                  decoration: InputDecoration(
                     labelText: "Custo Original",
+                    labelStyle: TextStyle(color: themeManager.textTertiary),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.inputBorderColor),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF0093FF)),
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.primaryColor),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
+                    filled: true,
+                    fillColor: themeManager.inputBgColor,
                   ),
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                 ),
@@ -562,15 +589,19 @@ class _EstoqueState extends State<Estoque> {
                 // QUANTIDADE (Obrigatório)
                 TextField(
                   controller: quantidadeController,
+                  style: TextStyle(color: themeManager.textPrimary),
                   decoration: InputDecoration(
                     label: _labelComAsterisco("Quantidade"),
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    border: OutlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.inputBorderColor),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF0093FF)),
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: themeManager.primaryColor),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
+                    filled: true,
+                    fillColor: themeManager.inputBgColor,
                   ),
                   keyboardType: TextInputType.number,
                 ),
@@ -579,15 +610,20 @@ class _EstoqueState extends State<Estoque> {
                 // VALIDADE (Opcional)
                 TextField(
                   controller: validadeController,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: themeManager.textPrimary),
+                  decoration: InputDecoration(
                     labelText: "Validade (AAAA-MM-DD)",
+                    labelStyle: TextStyle(color: themeManager.textTertiary),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.inputBorderColor),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF0093FF)),
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.primaryColor),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
+                    filled: true,
+                    fillColor: themeManager.inputBgColor,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -595,15 +631,20 @@ class _EstoqueState extends State<Estoque> {
                 // TAGS (Opcional)
                 TextField(
                   controller: tagsController,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: themeManager.textPrimary),
+                  decoration: InputDecoration(
                     labelText: "Tags",
+                    labelStyle: TextStyle(color: themeManager.textTertiary),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.inputBorderColor),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF0093FF)),
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.primaryColor),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
+                    filled: true,
+                    fillColor: themeManager.inputBgColor,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -611,15 +652,20 @@ class _EstoqueState extends State<Estoque> {
                 // DESCRIÇÃO (Opcional)
                 TextField(
                   controller: descricaoController,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: themeManager.textPrimary),
+                  decoration: InputDecoration(
                     labelText: "Descrição",
+                    labelStyle: TextStyle(color: themeManager.textTertiary),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.inputBorderColor),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF0093FF)),
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderSide: BorderSide(color: themeManager.primaryColor),
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
+                    filled: true,
+                    fillColor: themeManager.inputBgColor,
                   ),
                   maxLines: 3,
                 ),
@@ -638,7 +684,7 @@ class _EstoqueState extends State<Estoque> {
                               height: 140,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFF0093FF), width: 2),
+                                border: Border.all(color: themeManager.primaryColor, width: 2),
                                 image: DecorationImage(
                                   image: imagemBytes != null
                                       ? MemoryImage(imagemBytes!)
@@ -674,12 +720,12 @@ class _EstoqueState extends State<Estoque> {
                                   await deletarImagemImgbb();
                                 },
                                 child: Container(
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF0093FF),
+                                  decoration: BoxDecoration(
+                                    color: themeManager.primaryColor,
                                     shape: BoxShape.circle,
                                   ),
                                   padding: const EdgeInsets.all(4),
-                                  child: const Icon(Icons.close,
+                                  child: Icon(Icons.close,
                                       color: Colors.white, size: 16),
                                 ),
                               ),
@@ -695,14 +741,14 @@ class _EstoqueState extends State<Estoque> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF0093FF), Color(0xFF0066CC)],
+                              gradient: LinearGradient(
+                                colors: [themeManager.primaryColor, themeManager.primaryColorDark],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF0093FF).withOpacity(0.4),
+                                  color: themeManager.primaryColor.withOpacity(0.4),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -741,18 +787,18 @@ class _EstoqueState extends State<Estoque> {
                 }
               },
               style: TextButton.styleFrom(
-                foregroundColor: Colors.blueGrey[700],
+                foregroundColor: themeManager.textTertiary,
               ),
-              child: const Text(
+              child: Text(
                 "Cancelar",
-                style: TextStyle(fontWeight: FontWeight.w500),
+                style: TextStyle(fontWeight: FontWeight.w500, color: themeManager.textPrimary),
               ),
             ),
             // Botão Salvar com gradiente
             Container(
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0093FF), Color(0xFF0066CC)],
+                gradient: LinearGradient(
+                  colors: [themeManager.primaryColor, themeManager.primaryColorDark],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
@@ -789,13 +835,15 @@ class _EstoqueState extends State<Estoque> {
   }
 
   Widget produtoCard(Map<String, dynamic> p) {
+    final themeManager = Provider.of<ThemeManager>(context);
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFF0093FF).withOpacity(0.3)),
+        color: themeManager.cardBgColor,
+        border: Border.all(color: themeManager.primaryColor.withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -822,30 +870,30 @@ class _EstoqueState extends State<Estoque> {
               children: [
                 Text(
                   p['name'] ?? "Sem nome",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: Color(0xFF333333),
+                    color: themeManager.textPrimary,
                   ),
                 ),
                 Text(
                   "Lote: ${p['lote']}",
-                  style: const TextStyle(
-                    color: Color(0xFF666666),
+                  style: TextStyle(
+                    color: themeManager.textSecondary,
                   ),
                 ),
                 Text(
                   p['description'] ?? "",
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.grey),
+                  style: TextStyle(color: themeManager.textTertiary),
                 ),
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
                     "R\$ ${p['value']}",
-                    style: const TextStyle(
-                      color: Color(0xFF0093FF),
+                    style: TextStyle(
+                      color: themeManager.primaryColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -855,7 +903,7 @@ class _EstoqueState extends State<Estoque> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.edit, color: Color(0xFF0093FF)),
+            icon: Icon(Icons.edit, color: themeManager.primaryColor),
             onPressed: () => abrirDialogCadastro(produto: p),
           ),
           IconButton(
@@ -863,48 +911,55 @@ class _EstoqueState extends State<Estoque> {
             onPressed: () async {
               final confirmar = await showDialog<bool>(
                 context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text(
-                    'Excluir Produto',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
-                  ),
-                  content: Text('Deseja realmente excluir "${p['name']}"?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.blueGrey[700],
+                builder: (_) {
+                  final themeManager = Provider.of<ThemeManager>(context);
+                  return AlertDialog(
+                    backgroundColor: themeManager.dialogBgColor,
+                    title: Text(
+                      'Excluir Produto',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
                       ),
-                      child: const Text('Cancelar'),
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Colors.red, Color(0xFFCC0000)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
+                    content: Text(
+                      'Deseja realmente excluir "${p['name']}"?',
+                      style: TextStyle(color: themeManager.textPrimary),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: TextButton.styleFrom(
+                          foregroundColor: themeManager.textTertiary,
                         ),
-                        borderRadius: BorderRadius.circular(8),
+                        child: Text('Cancelar', style: TextStyle(color: themeManager.textPrimary)),
                       ),
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.transparent,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Colors.red, Color(0xFFCC0000)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                           ),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('Excluir'),
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            shadowColor: Colors.transparent,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text('Excluir'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                },
               );
 
               if (confirmar == true) await deletarProduto(p);
@@ -917,30 +972,47 @@ class _EstoqueState extends State<Estoque> {
 
   @override
   Widget build(BuildContext context) {
+    final themeManager = Provider.of<ThemeManager>(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(
           nomeEmpresa.isNotEmpty ? nomeEmpresa : 'Minha Empresa',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 18,
+            color: themeManager.textPrimary,
           ),
         ),
+        backgroundColor: themeManager.cardBgColor,
+        foregroundColor: themeManager.textPrimary,
         automaticallyImplyLeading: false,
         actions: [
+          // Botão de alternar tema
+          IconButton(
+            icon: Icon(
+              themeManager.isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
+              size: 24,
+              color: themeManager.textPrimary,
+            ),
+            onPressed: () {
+              themeManager.toggleTheme();
+            },
+            tooltip: themeManager.isDarkMode ? 'Modo Claro' : 'Modo Escuro',
+          ),
           // Botão de Sair com ícone e estilo melhorado
           Container(
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0093FF), Color(0xFF0066CC)],
+              gradient: LinearGradient(
+                colors: [themeManager.primaryColor, themeManager.primaryColorDark],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF0093FF).withOpacity(0.3),
+                  color: themeManager.primaryColor.withOpacity(0.3),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -957,43 +1029,43 @@ class _EstoqueState extends State<Estoque> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => abrirDialogCadastro(),
-        backgroundColor: const Color(0xFF0093FF),
+        backgroundColor: themeManager.primaryColor,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
       body: Container(
-        color: const Color(0xFFF8F9FA),
+        color: themeManager.scaffoldBgColor,
         child: SafeArea(
           child: loading
-              ? const Center(
+              ? Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0093FF)),
+                    color: themeManager.primaryColor,
                   ),
                 )
               : produtos.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.inventory_2,
                             size: 80,
-                            color: Color(0xFF0093FF),
+                            color: themeManager.primaryColor,
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
                           Text(
                             "Nenhum produto cadastrado",
                             style: TextStyle(
                               fontSize: 18,
-                              color: Color(0xFF666666),
+                              color: themeManager.textSecondary,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
                             "Clique no botão + para adicionar",
                             style: TextStyle(
                               fontSize: 14,
-                              color: Color(0xFF999999),
+                              color: themeManager.textTertiary,
                             ),
                           ),
                         ],
