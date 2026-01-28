@@ -1,4 +1,4 @@
-// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -89,27 +89,23 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget _buildContent(ThemeManager themeManager) {
     if (_isLoading) {
       return Scaffold(
-        body: Container(
-          color: themeManager.scaffoldBgColor,
-          child: SafeArea(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    color: themeManager.primaryColor,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Carregando...',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: themeManager.textPrimary,
-                    ),
-                  ),
-                ],
+        backgroundColor: themeManager.scaffoldBgColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                color: themeManager.primaryColor,
               ),
-            ),
+              const SizedBox(height: 20),
+              Text(
+                'Carregando...',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: themeManager.textPrimary,
+                ),
+              ),
+            ],
           ),
         ),
       );

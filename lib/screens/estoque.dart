@@ -290,7 +290,7 @@ class _EstoqueState extends State<Estoque> {
       return;
     }
 
-    // VALIDAÇÃO DE LOTE DUPLICADO (apenas para novo cadastro)
+    // VALIDAÇÃO DE LOTE DUPLICADO
     if (editarProdutoLote == null) {
       bool loteExiste = await verificarLoteExistente(lote);
       if (loteExiste) {
@@ -975,6 +975,7 @@ class _EstoqueState extends State<Estoque> {
     final themeManager = Provider.of<ThemeManager>(context);
     
     return Scaffold(
+      backgroundColor: themeManager.scaffoldBgColor,
       appBar: AppBar(
         title: Text(
           nomeEmpresa.isNotEmpty ? nomeEmpresa : 'Minha Empresa',
@@ -1000,7 +1001,7 @@ class _EstoqueState extends State<Estoque> {
             },
             tooltip: themeManager.isDarkMode ? 'Modo Claro' : 'Modo Escuro',
           ),
-          // Botão de Sair com ícone e estilo melhorado
+          // Botão de Sair 
           Container(
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
@@ -1033,51 +1034,46 @@ class _EstoqueState extends State<Estoque> {
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
-      body: Container(
-        color: themeManager.scaffoldBgColor,
-        child: SafeArea(
-          child: loading
+      body: loading
+          ? Center(
+              child: CircularProgressIndicator(
+                color: themeManager.primaryColor,
+              ),
+            )
+          : produtos.isEmpty
               ? Center(
-                  child: CircularProgressIndicator(
-                    color: themeManager.primaryColor,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inventory_2,
+                        size: 80,
+                        color: themeManager.primaryColor,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Nenhum produto cadastrado",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: themeManager.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Clique no botão + para adicionar",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: themeManager.textTertiary,
+                        ),
+                      ),
+                    ],
                   ),
                 )
-              : produtos.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.inventory_2,
-                            size: 80,
-                            color: themeManager.primaryColor,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            "Nenhum produto cadastrado",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: themeManager.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Clique no botão + para adicionar",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: themeManager.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: produtos.length,
-                      itemBuilder: (_, i) => produtoCard(produtos[i]),
-                    ),
-        ),
-      ),
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: produtos.length,
+                  itemBuilder: (_, i) => produtoCard(produtos[i]),
+                ),
     );
   }
 }
