@@ -902,20 +902,27 @@ class _EstoqueState extends State<Estoque> {
               ],
             ),
           ),
+          // Botão Editar
           IconButton(
             icon: Icon(Icons.edit, color: themeManager.primaryColor),
-            onPressed: () => abrirDialogCadastro(produto: p),
+            onPressed: () {
+              abrirDialogCadastro(produto: p);
+            },
           ),
+          // Botão Deletar
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: () async {
               final confirmar = await showDialog<bool>(
                 context: context,
-                builder: (_) {
-                  final themeManager = Provider.of<ThemeManager>(context);
+                barrierDismissible: false,
+                builder: (dialogContext) {
+                  final themeManager =
+                      Provider.of<ThemeManager>(dialogContext, listen: false);
+
                   return AlertDialog(
                     backgroundColor: themeManager.dialogBgColor,
-                    title: Text(
+                    title: const Text(
                       'Excluir Produto',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
@@ -928,11 +935,16 @@ class _EstoqueState extends State<Estoque> {
                     ),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.pop(context, false),
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop(false);
+                        },
                         style: TextButton.styleFrom(
                           foregroundColor: themeManager.textTertiary,
                         ),
-                        child: Text('Cancelar', style: TextStyle(color: themeManager.textPrimary)),
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(color: themeManager.textPrimary),
+                        ),
                       ),
                       Container(
                         decoration: BoxDecoration(
@@ -944,17 +956,24 @@ class _EstoqueState extends State<Estoque> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context, true),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop(true);
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
                             shadowColor: Colors.transparent,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text('Excluir'),
+                          child: const Text(
+                            'Excluir',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -962,7 +981,14 @@ class _EstoqueState extends State<Estoque> {
                 },
               );
 
-              if (confirmar == true) await deletarProduto(p);
+              // Se confirmou a exclusão
+              if (confirmar == true) {
+                await Future.delayed(const Duration(milliseconds: 150));
+
+                if (!mounted) return;
+
+                await deletarProduto(p);
+              }
             },
           ),
         ],
